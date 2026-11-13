@@ -6,7 +6,7 @@ import type { UserVesselEntry } from '../importer/dbFile';
 import type { SourceDoc } from '../importer/sources';
 import { datasetDef } from '../importer/datasets';
 import { autoMapping, editCell, numVal, type Mapping } from '../importer/convert';
-import { applyToVessel, compareRows, expectedRows, storedRows, type Provenance } from '../importer/apply';
+import { applyToVessel, compareRows, fsmBasisCheck, expectedRows, storedRows, type Provenance } from '../importer/apply';
 import { buildTankImports, DEFAULT_TITLE, parseTitle, splitTanks, tankChecks, type SplitMethod, type TankImport } from '../importer/multiTank';
 import type { Check } from '../importer/checks';
 import { ReviewTable, SourceGrid } from './ImportTables';
@@ -28,6 +28,8 @@ export function MultiTankSection({ doc, vessel, target, save }: Props) {
   useEffect(() => { if (titlePages.length) { setFrom(titlePages[0]); setTo(titlePages[titlePages.length - 1]); } }, [titlePages]);
   const [nameCol, setNameCol] = useState(0);
   const [fillGaps, setFillGaps] = useState(true);
+  /** SG at which an FSM (t·m) column is given; '' = each tank's own density */
+  const [fsmSG, setFsmSG] = useState<number | ''>('');
 
   const tables = useMemo(() => (doc.kind === 'PDF' ? doc.tables.filter((t) => (t.page ?? 0) >= from && (t.page ?? 0) <= to) : doc.tables), [doc, from, to]);
   const blocks = useMemo(() => splitTanks(tables, method, { title, nameCol }), [tables, method, title, nameCol]);
@@ -42,7 +44,7 @@ export function MultiTankSection({ doc, vessel, target, save }: Props) {
   const [confirm, setConfirm] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
 
-  const checks = useMemo(() => new Map<string, Check[]>(imports.map((t) => [t.key, tankChecks(t, vessel, imports)])), [imports, vessel]);
+  const checks = useMemo(() => new Map<string, Check[]>(imports.map((t) => { const fb = fsmBasisCheck(t.conv, typeof t.density === 'number' ? t.density : undefined, fsmSG === '' ? undefined : fsmSG); return [t.key, [...(fb ? [fb] : []), ...tankChecks(t, vessel, imports)]]; })), [imports, vessel, fsmSG]);
   const inc = imports.filter((t) => t.include);
   const withErr = inc.filter((t) => checks.get(t.key)!.some((c) => c.level === 'error'));
   const withWarn = inc.filter((t) => checks.get(t.key)!.some((c) => c.level === 'warn'));
@@ -72,7 +74,7 @@ export function MultiTankSection({ doc, vessel, target, save }: Props) {
     const prov: Record<string, Provenance> = { ...target.provenance };
     let rows = 0, values = 0;
     for (const t of inc) {
-      const o = { trim: 0, tank: { name: t.name.trim(), group: t.group, density: t.density as number, isConsumable: t.consumable, type: t.type.trim().toUpperCase() || undefined } };
+      const o = { trim: 0, tank: { name: t.name.trim(), group: t.group, density: t.density as number, isConsumable: t.consumable, type: t.type.trim().toUpperCase() || undefined, fsmDensity: fsmSG === '' ? undefined : fsmSG } };
       try { v = applyToVessel('TANK', v, t.conv, o); } catch (e) { setResult({ ok: false, text: `${t.name}: ${e instanceof Error ? e.message : e}. Nothing was stored.` }); return; }
       const exp = expectedRows('TANK', t.conv, o);
       const cmp = compareRows(exp, storedRows('TANK', v, o), false);
@@ -139,6 +141,11 @@ export function MultiTankSection({ doc, vessel, target, save }: Props) {
             <label style={{ flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'end' }}>
               <input type="checkbox" checked={fillGaps} onChange={(e) => setFillGaps(e.target.checked)} /> Fill booklet blanks (empty-tank centres, free surface at 0 % and 100 %)
             </label>
+            {(mapping.cols.fsm ?? -1) >= 0 && !((mapping.cols.inertia ?? -1) >= 0) && (
+              <label title="The FSM printed in the tables is the inertia × this SG. Leave empty when each table gives FSM at that tank's own liquid density.">FSM (t·m) column given at SG
+                <input type="number" step="any" style={{ width: 150 }} placeholder="each tank's own density" value={fsmSG} onChange={(e) => setFsmSG(e.target.value === '' ? '' : Number(e.target.value))} />
+              </label>
+            )}
           </div>
           <div className="import-source">
             <SourceGrid rows={first.rows} mapping={{ ...mapping, firstRow: 0, lastRow: first.rows.length - 1 }} def={def} onMap={(m) => setMapping({ ...mapping, ...m, firstRow: mapping.firstRow, lastRow: mapping.lastRow })} />

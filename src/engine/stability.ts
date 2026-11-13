@@ -959,7 +959,7 @@ export function calculate(vessel: Vessel, lc: LoadCase, library: CriteriaLibrary
     deadweight: disp - vessel.lightship.weight,
     lcg, tcg, kg, sumFsm, fsc, kgFluid,
     draftMean: draft, draftAP, draftFP, draftMS, trim, heel, side,
-    lcb, lcf, kmt, kb: hs.kb, mtc, tpc, gmSolid, gmFluid,
+    lcb, lcf, kmt, kml: hs.kml, kb: hs.kb, mtc, tpc, gmSolid, gmFluid,
     floodAngle, floodOpening, deckEdgeAngle,
     gzMax, gzMaxAngle, avs,
     gzTable, gzCurve, tanks, summary, criteria: appliedCriteria, groups, weather, fifi, crane, warnings, overallPass,

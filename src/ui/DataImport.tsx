@@ -8,7 +8,7 @@ import { DATASETS, datasetDef, type DatasetKind } from '../importer/datasets';
 import { autoMapping, convert, editCell, type Conversion, type Mapping } from '../importer/convert';
 import { checkConversion } from '../importer/checks';
 import { applyRefs, DRAFT_REF_LABEL, KN_BASIS_LABEL, type DraftRef, type KnBasis } from '../importer/references';
-import { applyToVessel, applyWeights, compareRows, datasetKey, expectedRows, SORTED, storedRows, type ApplyOptions, type Provenance } from '../importer/apply';
+import { applyToVessel, applyWeights, fsmBasisCheck, compareRows, datasetKey, expectedRows, SORTED, storedRows, type ApplyOptions, type Provenance } from '../importer/apply';
 import { ACCEPT, fromPastedText, readSource, type SourceDoc } from '../importer/sources';
 import { pagesText, parsePages } from '../importer/multiTrim';
 import { newId } from '../store';
@@ -54,6 +54,8 @@ export function DataImportScreen(p: Props) {
   const [tankName, setTankName] = useState('');
   const [tankGroup, setTankGroup] = useState<TankGroup>('BALLAST');
   const [tankDensity, setTankDensity] = useState(1.025);
+  /** SG at which an FSM (t·m) column is given; '' = the tank's own density */
+  const [fsmSG, setFsmSG] = useState<number | ''>('');
   const [consumable, setConsumable] = useState(false);
   const [draftRef, setDraftRef] = useState<DraftRef>('MID');
   const [draftX, setDraftX] = useState<number | undefined>(undefined);
@@ -100,7 +102,7 @@ export function DataImportScreen(p: Props) {
   // drafts at LCF / AP / FP → midship; KN rows by draft / volume → displacement
   const refd = useMemo(() => (baseConv ? applyRefs(kind, baseConv, vessel, trim, { draftRef, draftX, knBasis }) : null), [baseConv, kind, vessel, trim, draftRef, draftX, knBasis]);
   const conv = refd?.conv ?? null;
-  const checks = useMemo(() => (conv ? [...(refd?.checks ?? []), ...checkConversion(kind, conv, vessel, { density: tankDensity })] : []), [conv, refd, kind, vessel, tankDensity]);
+  const checks = useMemo(() => (conv ? [...(refd?.checks ?? []), ...(kind === 'TANK' ? [fsmBasisCheck(conv, tankDensity, fsmSG === '' ? undefined : fsmSG)].filter((x): x is NonNullable<typeof x> => !!x) : []), ...checkConversion(kind, conv, vessel, { density: tankDensity })] : []), [conv, refd, kind, vessel, tankDensity, fsmSG]);
   const cellErrors = conv ? conv.rows.reduce((s, r) => s + [...Object.values(r.cells), ...(r.kn ?? [])].filter((c) => c.status === 'error').length, 0) : 0;
   const edited = conv ? conv.rows.reduce((s, r) => s + [...Object.values(r.cells), ...(r.kn ?? [])].filter((c) => c.status === 'edited').length, 0) : 0;
   const missingReq = def.fields.filter((f) => f.required && (mapping?.cols[f.key] ?? -1) < 0);
@@ -136,7 +138,7 @@ export function DataImportScreen(p: Props) {
 
   function apply() {
     if (!conv || !doc || !table || !mapping || blockers.length) return;
-    const o: ApplyOptions = { trim, angles: mapping.angleCols.map((a) => a.angle), tank: kind === 'TANK' ? { name: tankName.trim(), group: tankGroup, density: tankDensity, isConsumable: consumable } : undefined };
+    const o: ApplyOptions = { trim, angles: mapping.angleCols.map((a) => a.angle), tank: kind === 'TANK' ? { name: tankName.trim(), group: tankGroup, density: tankDensity, isConsumable: consumable, fsmDensity: fsmSG === '' ? undefined : fsmSG } : undefined };
     const exp = expectedRows(kind, conv, o);
     const values = exp.reduce((s, r) => s + r.filter((x) => !(typeof x === 'number' && Number.isNaN(x))).length, 0);
     const location = `${table.label}, rows ${conv.rows[0].src + 1}–${conv.rows[conv.rows.length - 1].src + 1}`;
@@ -226,6 +228,7 @@ export function DataImportScreen(p: Props) {
             </label>
             <label>Category<select value={tankGroup} onChange={(e) => setTankGroup(e.target.value as TankGroup)}>{categories(vessel).map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}</select></label>
             <label>Density t/m³<input type="number" step="any" value={tankDensity} onChange={(e) => setTankDensity(Number(e.target.value))} /></label>
+            <label title="Only used when the table gives FSM (t·m) instead of the moment of inertia (m⁴)">FSM column given at SG<input type="number" step="any" placeholder={`tank density (${tankDensity})`} value={fsmSG} onChange={(e) => setFsmSG(e.target.value === '' ? '' : Number(e.target.value))} /></label>
             <label style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><input type="checkbox" checked={consumable} onChange={(e) => setConsumable(e.target.checked)} /> Consumable</label>
           </>}
           {!isKv && kind === 'WEIGHTS' && <p className="muted small" style={{ alignSelf: 'end' }}>Added to load case: <b>{p.lc.name}</b></p>}

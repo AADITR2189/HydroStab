@@ -8,7 +8,7 @@ export interface BookletExtract {
     summerDraft: number; rhoRef: number; midshipFromAP: number;
     lightship: { weight: number; lcg: number; tcg: number; vcg: number };
   };
-  hydrostatics: { trim: number; rows: { draft: number; displacement: number; lcb: number; lcf: number; kb: number; tpc: number; mtc: number; kmt: number }[] }[];
+  hydrostatics: { trim: number; rows: { draft: number; displacement: number; lcb: number; lcf: number; kb: number; tpc: number; mtc: number; kmt: number; kml?: number }[] }[];
   crossCurves: { trim: number; angles: number[]; rows: { displacement: number; kn: number[] }[] }[];
   floodPoints: { name: string; x: number; y: number; z: number }[];
   windage?: { draft: number; area: number; centroidZ: number; underwaterCentroidZ: number }[];
@@ -22,7 +22,7 @@ const GROUPS: Record<string, TankGroup> = {
 export function vesselFromBooklet(x: BookletExtract): Vessel {
   const p = x.particulars;
   const mapRows = (rows: BookletExtract['hydrostatics'][number]['rows']): HydroRow[] =>
-    rows.map((r) => ({ draft: r.draft, displacement: r.displacement, lcb: r.lcb, lcf: r.lcf, kb: r.kb, kmt: r.kmt, tpc: r.tpc, mtc: r.mtc }));
+    rows.map((r) => ({ draft: r.draft, displacement: r.displacement, lcb: r.lcb, lcf: r.lcf, kb: r.kb, kmt: r.kmt, tpc: r.tpc, mtc: r.mtc, ...(typeof r.kml === 'number' ? { kml: r.kml } : {}) }));
   const h0 = x.hydrostatics.find((t) => t.trim === 0)!;
   const k0 = x.crossCurves.find((t) => t.trim === 0)!;
 

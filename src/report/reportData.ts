@@ -53,7 +53,7 @@ export function conditionRows(v: Vessel, lc: LoadCase, r: Results): [string, str
     ['Heel (static)', `${n(Math.abs(r.heel), 2)}° ${r.heel > 0.005 ? 'starboard' : r.heel < -0.005 ? 'port' : ''}`],
     ['LCG (from midship)', `${fromMid(r.lcg, v.lbp)} m`], ['TCG', `${trans(r.tcg)} m`], ['KG (solid)', `${n(r.kg, 3)} m`],
     ['Free surface moment ΣFSM', `${n(r.sumFsm, 1)} t·m (${fsmLabel})`], ['Free surface correction', `${n(r.fsc, 3)} m`], ['KG corrected (fluid)', `${n(r.kgFluid, 3)} m`],
-    ['KM (transverse)', `${n(r.kmt, 3)} m`], ['GM solid', `${n(r.gmSolid, 3)} m`], ['GM fluid', `${n(r.gmFluid, 3)} m`],
+    ['KM (transverse)', `${n(r.kmt, 3)} m`], ...(typeof r.kml === 'number' ? [['KM longitudinal (KML)', `${n(r.kml, 3)} m`] as [string, string]] : []), ['GM solid', `${n(r.gmSolid, 3)} m`], ['GM fluid', `${n(r.gmFluid, 3)} m`],
     ['LCB / LCF (from midship)', `${fromMid(r.lcb, v.lbp)} / ${fromMid(r.lcf, v.lbp)} m`], ['TPC / MTC', `${n(r.tpc, 2)} t/cm / ${n(r.mtc, 2)} t·m/cm`],
     ['Down-flooding angle θf', `${n(r.floodAngle, 1)}°${r.floodOpening ? ` (${r.floodOpening}, approximate method)` : ''}`],
     ['Deck-edge immersion angle', `${n(r.deckEdgeAngle, 1)}°`],

@@ -42,6 +42,10 @@ From the volume:
   - i_t is the transverse inertia of the liquid surface, interpolated at V.
   - With the "maximum" method, i_t is the largest inertia in the table.
   - With "manual total", one FSM total is typed in for the whole ship.
+- **Tank tables that give FSM (t·m) instead of i_t:** on import, FSM is turned into inertia with i_t = FSM / SG_table.
+  - SG_table is the SG the booklet used for that FSM column ("FSM column given at SG" on import).
+  - If you leave it empty, the tank's own liquid density is used.
+  - Afterwards, every load case uses FSM = i_t × the density of the liquid actually in the tank, so changing the liquid gives the correct FSM.
 - A full (pressed-up) tank has FSM = 0.
 - Checks:
   - A volume above capacity is an error.
@@ -93,7 +97,11 @@ If |t| > 1 % of L, a warning says the even-keel table loses accuracy.
    - d_MS = d + t·(x₀ − L/2) / L
 5. If LCG lies outside the trim range of the tables, the calculation stops with a message. Nothing is extrapolated.
 
-### 3.4 Block coefficient
+### 3.4 KML (longitudinal metacentre)
+
+If the hydrostatic table has a KML column, it is imported, stored, listed with the hydrostatics, and shown in the results and reports (interpolated like KM). It is for information only: no stability check uses it.
+
+### 3.5 Block coefficient
 
 C_b comes from the table if it is there. If not: C_b = (Δ/ρ) / (L·B·d_mean).
 

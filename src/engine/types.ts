@@ -11,6 +11,7 @@ export interface HydroRow {
   lcb: number;          // m from AP
   lcf: number;          // m from AP
   kmt: number;          // m
+  kml?: number;         // m, longitudinal KM (shown only; not used in the stability checks)
   tpc: number;          // t/cm at rhoRef
   mtc: number;          // t·m/cm at rhoRef
   cb?: number;          // block coefficient (optional; derived if missing)
@@ -403,6 +404,8 @@ export interface Results {
   kmt: number;
   /** VCB (KB) if the hydrostatic tables provide it */
   kb: number | null;
+  /** longitudinal KM, when the hydrostatic tables give it (for information) */
+  kml?: number | null;
   mtc: number;
   tpc: number;
   gmSolid: number;

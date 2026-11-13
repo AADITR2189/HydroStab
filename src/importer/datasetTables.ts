@@ -31,7 +31,7 @@ const C = (key: string, label: string, unit: string, type: 'num' | 'text' = 'num
 
 export function columnsOf(v: Vessel, ref: DsRef): DsColumn[] {
   switch (ref.kind) {
-    case 'HYDRO': return [C('draft', 'Draft', 'm'), C('displacement', 'Δ', 't'), C('lcb', 'LCB from AP', 'm'), C('lcf', 'LCF from AP', 'm'), C('kmt', 'KMT', 'm'), C('tpc', 'TPC', 't/cm'), C('mtc', 'MTC', 't·m/cm'), C('kb', 'KB', 'm'), C('cb', 'C_B', '')];
+    case 'HYDRO': return [C('draft', 'Draft', 'm'), C('displacement', 'Δ', 't'), C('lcb', 'LCB from AP', 'm'), C('lcf', 'LCF from AP', 'm'), C('kmt', 'KMT', 'm'), C('tpc', 'TPC', 't/cm'), C('mtc', 'MTC', 't·m/cm'), C('kb', 'KB', 'm'), C('cb', 'C_B', ''), C('kml', 'KML', 'm')];
     case 'KN': return [C('displacement', 'Δ', 't'), ...v.kn.angles.map((a) => C(`kn${a}`, `KN ${a}°`, 'm'))];
     case 'TANK': return [C('sounding', 'Sounding', 'm'), C('volume', 'Volume', 'm³'), C('lcg', 'LCG from AP', 'm'), C('tcg', 'TCG + stbd', 'm'), C('vcg', 'VCG', 'm'), C('inertia', 'i_T', 'm⁴')];
     case 'WINDAGE': return [C('draft', 'Draft', 'm'), C('area', 'Area', 'm²'), C('centroidZ', 'Centroid above base', 'm'), C('underwaterCentroidZ', 'Underwater centre', 'm')];

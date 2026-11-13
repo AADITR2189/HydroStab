@@ -35,6 +35,7 @@ export const DATASETS: DatasetDef[] = [
       { key: 'kmt', label: 'KMT', unit: 'm', required: true, type: 'num', guess: /kmt|km\b|km\s*\(/i },
       { key: 'tpc', label: 'TPC', unit: 't/cm', required: true, type: 'num', guess: /tpc|tp[\s.]*[ce]m\b|tp[ce]m|t\/cm|tonnes? per c/i },
       { key: 'mtc', label: 'MTC', unit: 't·m/cm', required: true, type: 'num', guess: /mtc|mt[\s.]*[ce]m\b|mt[ce]m|mct|moment to change/i },
+      { key: 'kml', label: 'KML (longitudinal)', unit: 'm', required: false, type: 'num', guess: /kml|km\s*l\b|km\s*long|long\w*\s*km/i },
       { key: 'kb', label: 'KB (VCB)', unit: 'm', required: false, type: 'num', guess: /kb|vcb/i },
       { key: 'cb', label: 'Block coefficient C_B', unit: '', required: false, type: 'num', guess: /cb\b|block/i },
     ],

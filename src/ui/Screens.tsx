@@ -26,6 +26,7 @@ export function ResultsSidebar({ r, error }: { r: Results | null; error: string 
     ['Trim', `${f(Math.abs(r.trim), 3)} m ${r.trim >= 0 ? 'by stern' : 'by head'}`],
     ['Heel', `${f(Math.abs(r.heel), 2)}° ${r.heel > 0.005 ? 'stbd' : r.heel < -0.005 ? 'port' : ''}`],
     ['KM', `${f(r.kmt, 3)} m`],
+    ...(typeof r.kml === 'number' ? [['KML', `${f(r.kml, 3)} m`] as [string, string]] : []),
     ['KG', `${f(r.kg, 3)} m`],
     ['FS correction', `${f(r.fsc, 3)} m`],
     ['KG fluid', `${f(r.kgFluid, 3)} m`],
@@ -381,10 +382,10 @@ export function VesselData({ vessel, status, source }: { vessel: Vessel; status:
         <div className="panel-head"><h2>Hydrostatic table</h2><span className="muted">ρ = {vessel.hydro.rhoRef} t/m³ · {vessel.hydro.rows.length} rows</span></div>
         <div className="table-wrap tall">
           <table className="grid">
-            <thead><tr><th className="num">Draft m</th><th className="num">Δ t</th><th className="num">LCB m</th><th className="num">LCF m</th><th className="num">KB m</th><th className="num">KM m</th><th className="num">TPC t/cm</th><th className="num">MTC t·m/cm</th><th className="num">C_B</th></tr></thead>
+            <thead><tr><th className="num">Draft m</th><th className="num">Δ t</th><th className="num">LCB m</th><th className="num">LCF m</th><th className="num">KB m</th><th className="num">KM m</th><th className="num">TPC t/cm</th><th className="num">MTC t·m/cm</th><th className="num">C_B</th><th className="num">KML m</th></tr></thead>
             <tbody>
               {vessel.hydro.rows.map((h) => (
-                <tr key={h.draft}><td className="num">{f(h.draft, 2)}</td><td className="num">{f(h.displacement, 1)}</td><td className="num">{f(h.lcb, 3)}</td><td className="num">{f(h.lcf, 3)}</td><td className="num">{f(h.kb, 3)}</td><td className="num">{f(h.kmt, 3)}</td><td className="num">{f(h.tpc, 2)}</td><td className="num">{f(h.mtc, 1)}</td><td className="num">{f(h.cb, 3)}</td></tr>
+                <tr key={h.draft}><td className="num">{f(h.draft, 2)}</td><td className="num">{f(h.displacement, 1)}</td><td className="num">{f(h.lcb, 3)}</td><td className="num">{f(h.lcf, 3)}</td><td className="num">{f(h.kb, 3)}</td><td className="num">{f(h.kmt, 3)}</td><td className="num">{f(h.tpc, 2)}</td><td className="num">{f(h.mtc, 1)}</td><td className="num">{f(h.cb, 3)}</td><td className="num">{f(h.kml, 3)}</td></tr>
               ))}
             </tbody>
           </table>

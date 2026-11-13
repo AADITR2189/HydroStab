@@ -4,11 +4,13 @@ import type { HydroRow, LoadCase, Tank, TankGroup, Vessel } from '../engine/type
 import type { DatasetKind } from './datasets';
 import { numVal, type Conversion } from './convert';
 
+import type { Check } from './checks';
+
 export interface ApplyOptions {
   trim: number;
   /** KN: heel angle of each KN column, in column order */
   angles?: number[];
-  tank?: { name: string; group: TankGroup; density: number; isConsumable: boolean; type?: string };
+  tank?: { name: string; group: TankGroup; density: number; isConsumable: boolean; type?: string; fsmDensity?: number };
 }
 
 export interface Provenance {
@@ -47,7 +49,7 @@ export function lightshipTotals(items: { weight: number; lcg: number; tcg: numbe
 /** The values as they will be stored, in source order: one array of numbers per row. */
 export function expectedRows(kind: DatasetKind, c: Conversion, o: ApplyOptions): (number | string)[][] {
   switch (kind) {
-    case 'HYDRO': return c.rows.map((r) => ['draft', 'displacement', 'lcb', 'lcf', 'kmt', 'tpc', 'mtc', 'kb', 'cb'].map((k) => n(r, k) ?? NaN)).filter((x) => !Number.isNaN(x[0]));
+    case 'HYDRO': return c.rows.map((r) => ['draft', 'displacement', 'lcb', 'lcf', 'kmt', 'tpc', 'mtc', 'kb', 'cb', 'kml'].map((k) => n(r, k) ?? NaN)).filter((x) => !Number.isNaN(x[0]));
     case 'KN': return c.rows.map((r) => [n(r, 'displacement')!, ...r.kn!.map((x) => (typeof x.value === 'number' ? x.value : NaN))]);
     case 'TANK': return c.rows.map((r) => [n(r, 'sounding') ?? NaN, n(r, 'volume')!, n(r, 'lcg')!, n(r, 'tcg')!, n(r, 'vcg')!, inertiaOf(r, o)]);
     case 'WINDAGE': return c.rows.map((r) => [n(r, 'draft')!, n(r, 'area')!, n(r, 'centroidZ')!, n(r, 'underwaterCentroidZ') ?? NaN]);
@@ -61,14 +63,29 @@ function inertiaOf(r: Conversion['rows'][number], o: ApplyOptions) {
   const i = n(r, 'inertia');
   if (i !== undefined) return i;
   const f = n(r, 'fsm');
-  return f !== undefined && o.tank?.density ? f / o.tank.density : 0;
+  const sg = o.tank?.fsmDensity ?? o.tank?.density;
+  return f !== undefined && sg ? f / sg : 0;
+}
+
+/** A table that gives FSM (t·m) instead of i_T: say at which SG it is turned into i_T = FSM / SG. */
+export function fsmBasisCheck(c: Conversion, tankDensity: number | undefined, fsmDensity: number | undefined): Check | null {
+  const hasI = c.rows.some((r) => n(r, 'inertia') !== undefined);
+  if (hasI || !c.rows.some((r) => n(r, 'fsm') !== undefined)) return null;
+  const sg = fsmDensity ?? tankDensity;
+  if (!(sg && sg > 0)) return { level: 'error', title: 'FSM column: enter the SG at which the FSM values are given' };
+  const own = fsmDensity === undefined || fsmDensity === tankDensity;
+  return {
+    level: 'ok',
+    title: `FSM (t·m) taken as given at SG ${sg}${own ? ' (the tank liquid density)' : ''}: stored as i_T = FSM ÷ ${sg}`,
+    detail: `In every load case the program uses FSM = i_T × the density of the liquid actually in the tank${own ? '' : ` (the tank's own density here is ${tankDensity ?? '—'})`}, so a different liquid gives the correct FSM.`,
+  };
 }
 
 /** Read the dataset back from a stored vessel / load case in the same layout as expectedRows. */
 export function storedRows(kind: DatasetKind, v: Vessel, o: ApplyOptions, lc?: LoadCase, count?: number): (number | string)[][] | null {
   const hydroRows = (): HydroRow[] | undefined => (v.hydro.trims && v.hydro.trims.length > 1 ? v.hydro.trims.find((t) => t.trim === o.trim)?.rows : o.trim === 0 ? v.hydro.rows : undefined);
   switch (kind) {
-    case 'HYDRO': return hydroRows()?.map((h) => [h.draft, h.displacement, h.lcb, h.lcf, h.kmt, h.tpc, h.mtc, h.kb ?? NaN, h.cb ?? NaN]) ?? null;
+    case 'HYDRO': return hydroRows()?.map((h) => [h.draft, h.displacement, h.lcb, h.lcf, h.kmt, h.tpc, h.mtc, h.kb ?? NaN, h.cb ?? NaN, h.kml ?? NaN]) ?? null;
     case 'KN': {
       const t = v.kn.trims && v.kn.trims.length > 1 ? v.kn.trims.find((x) => x.trim === o.trim) : o.trim === 0 ? v.kn : undefined;
       if (!t) return null;
@@ -108,6 +125,7 @@ export function applyToVessel(kind: DatasetKind, v0: Vessel, c: Conversion, o: A
       const h: HydroRow = { draft: n(r, 'draft')!, displacement: n(r, 'displacement')!, lcb: n(r, 'lcb')!, lcf: n(r, 'lcf')!, kmt: n(r, 'kmt')!, tpc: n(r, 'tpc')!, mtc: n(r, 'mtc')! };
       if (n(r, 'kb') !== undefined) h.kb = n(r, 'kb');
       if (n(r, 'cb') !== undefined) h.cb = n(r, 'cb');
+      if (n(r, 'kml') !== undefined) h.kml = n(r, 'kml');
       return h;
     }).sort((a, b) => a.draft - b.draft);
     if (o.trim === 0 && (!v.hydro.trims || v.hydro.trims.length < 2)) { v.hydro.rows = rows; v.hydro.trims = undefined; }

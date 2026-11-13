@@ -17,6 +17,7 @@ export interface HydroState {
   lcf: number;
   kmt: number;
   kb: number | null; // VCB
+  kml: number | null; // longitudinal KM (information only)
   mtc: number;       // at actual density
   tpc: number;       // at actual density
   cb: number | null;
@@ -57,6 +58,7 @@ export function solveHydrostatics(
       method: 'EVEN_KEEL', draft, draftAP, draftFP, draftMS: draft + (trim * (lcf - L / 2)) / L, trim,
       lcb, lcf, kmt, mtc, tpc,
       kb: rows.every((r) => typeof r.kb === 'number') ? g('kb') : null,
+      kml: rows.every((r) => typeof r.kml === 'number') ? g('kml') : null,
       cb: rows[0].cb !== undefined ? g('cb') : null,
       lwl: rows[0].lwl !== undefined ? g('lwl') : null,
     };
@@ -99,6 +101,7 @@ export function solveHydrostatics(
     lcf: it(at('lcf')),
     kmt: it(at('kmt')),
     kb: has('kb') ? it(at('kb')) : null,
+    kml: has('kml') ? it(at('kml')) : null,
     mtc, tpc,
     cb: has('cb') ? it(at('cb')) : null,
     lwl: has('lwl') ? it(at('lwl')) : null,

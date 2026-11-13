@@ -38,6 +38,7 @@ for (const [kind, from, to] of [['HYDRO', 129, 133], ['KN', 134, 138]] as const)
     const imports = buildTrimImports(kind, blocks, m);
     it('finds 5 trims, 26 rows each, no errors or warnings', () => {
       expect(imports.map((t) => t.trim)).toEqual([0, 0.5, 1, -0.5, -1]);
+      if (kind === 'HYDRO') { expect(m.cols.kml, 'KML column').toBeGreaterThanOrEqual(0); expect(m.cols.kml).not.toBe(m.cols.kmt); }
       for (const t of imports) {
         expect(t.conv.rows.length).toBe(26);
         expect(trimChecks(kind, t, imports, marsol, m).filter((c) => c.level !== 'ok').map((c) => c.title), `trim ${t.trim}`).toEqual([]);
