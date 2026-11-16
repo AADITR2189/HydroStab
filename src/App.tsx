@@ -15,10 +15,11 @@ import { useHistory } from './ui/history';
 import { UpdatePrompt } from './ui/UpdatePrompt';
 import { CriteriaLibraryScreen } from './ui/CriteriaLibrary';
 import { ReportsScreen } from './ui/Reports';
+import { CompareScreen } from './ui/Compare';
 import { LoadCaseEditor } from './ui/LoadCaseEditor';
 import { Criteria, Dashboard, ResultsSidebar, VesselData } from './ui/Screens';
 
-type Screen = 'dashboard' | 'loadcase' | 'criteria' | 'library' | 'vessel' | 'reports' | 'import' | 'data';
+type Screen = 'dashboard' | 'loadcase' | 'criteria' | 'compare' | 'library' | 'vessel' | 'reports' | 'import' | 'data';
 const NAV: { id: Screen; label: string; icon: IconName; title: string; about: string; sepBefore?: boolean }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', title: 'Dashboard', about: 'Vessel particulars and every load case at a glance.' },
   { id: 'vessel', label: 'Vessels', icon: 'ship', title: 'Vessels', about: 'Your vessels, the built-in ones, and the database file for backup and transfer.', sepBefore: true },
@@ -26,6 +27,7 @@ const NAV: { id: Screen; label: string; icon: IconName; title: string; about: st
   { id: 'data', label: 'Data Tables', icon: 'table', title: 'Data Tables', about: 'Every table stored for this vessel, where it came from, and the changes made since.' },
   { id: 'loadcase', label: 'Load Case', icon: 'loadcase', title: 'Load Case', about: 'Tanks, weights and the stability groups to check for the selected load case.', sepBefore: true },
   { id: 'criteria', label: 'Stability Results', icon: 'results', title: 'Stability Results', about: 'GZ curve and every criterion of the selected load case.' },
+  { id: 'compare', label: 'Compare', icon: 'compare', title: 'Compare Load Cases', about: 'Drafts, stability, GZ curves and every criterion of several load cases side by side.' },
   { id: 'library', label: 'Criteria Setup', icon: 'library', title: 'Criteria Setup', about: 'Your own criteria, heeling moments and stability groups.' },
   { id: 'reports', label: 'Reports', icon: 'report', title: 'Reports', about: 'PDF and Excel reports of the load cases.', sepBefore: true },
 ];
@@ -105,11 +107,11 @@ export default function App() {
   const saveDb = useCallback(async () => setToast({ text: await saveDatabaseFile(dbData()), icon: 'save' }), // eslint-disable-next-line react-hooks/exhaustive-deps
     [userVessels.list, store.all, library.lib]);
 
-  // keyboard: Alt+1…8 screens, Ctrl+Z / Ctrl+Y undo / redo, Ctrl+S save database file, ? shortcuts
+  // keyboard: Alt+1…9 screens, Ctrl+Z / Ctrl+Y undo / redo, Ctrl+S save database file, ? shortcuts
   useEffect(() => {
     const on = (e: KeyboardEvent) => {
       const mod = e.ctrlKey || e.metaKey;
-      if (e.altKey && !mod && /^Digit[1-8]$/.test(e.code)) { e.preventDefault(); setScreen(SCREENS[Number(e.code.slice(5)) - 1]); return; }
+      if (e.altKey && !mod && /^Digit[1-9]$/.test(e.code)) { e.preventDefault(); setScreen(SCREENS[Number(e.code.slice(5)) - 1]); return; }
       if (mod && e.key.toLowerCase() === 's') { e.preventDefault(); void saveDb(); return; }
       if (isTyping(e.target)) return; // inside a text field the browser's own undo works on the text
       if (mod && e.key.toLowerCase() === 'z' && !e.shiftKey) { e.preventDefault(); doUndo(); return; }
@@ -171,6 +173,7 @@ export default function App() {
               onDuplicate={tracked('Duplicate load case', store.duplicate)} onCreate={tracked('Add load case', store.create)} onRemove={tracked('Delete load case', store.remove, true)} onAdd={tracked('Add load case', store.add)} />
           )}
           {screen === 'loadcase' && <LoadCaseEditor vessel={vessel} lc={lc} r={r} onChange={tracked('Edit load case', store.update)} customGroups={library.lib.groups} onCreate={tracked('Add load case', store.add)} onCheck={() => setScreen('criteria')} />}
+          {screen === 'compare' && <CompareScreen vessel={vessel} vesselId={store.entry.id} cases={store.cases} activeId={lc.id} calc={calc} onOpen={(id) => { store.setActive(id); setScreen('loadcase'); }} />}
           {screen === 'library' && <CriteriaLibraryScreen lib={library.lib} addCriterion={tracked('Save criterion', library.addCriterion)} removeCriterion={tracked('Delete criterion', library.removeCriterion, true)} saveGroup={tracked('Save stability group', library.saveGroup)} removeGroup={tracked('Delete stability group', library.removeGroup, true)} saveMoment={tracked('Save heeling moment', library.saveMoment)} removeMoment={tracked('Delete heeling moment', library.removeMoment, true)} preview={r} lcName={lc.name} />}
           {screen === 'criteria' && (r ? <Criteria r={r} lc={lc} onChange={tracked('Edit load case', store.update)} /> : <div className="error-box">{error}</div>)}
           {screen === 'reports' && <ReportsScreen key={vessel.name} vessel={vessel} status={status} source={store.entry.source} cases={store.cases} activeId={lc.id} calc={calc} />}

@@ -25,6 +25,7 @@ const P: Record<string, string> = {
   save: 'M5 3h11l3 3v15H5zM8 3v5h7V3M8 14h8v7H8z',
   plus: 'M12 5v14M5 12h14',
   arrowRight: 'M5 12h14M13 6l6 6-6 6',
+  compare: 'M4 4h6v16H4zM14 4h6v16h-6zM7 8v.01M17 12v.01M7 14h0M4 12h6M14 16h6',
 };
 
 export type IconName = keyof typeof P;

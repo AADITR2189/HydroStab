@@ -562,3 +562,23 @@ button .icon-svg.after { margin: 0 0 0 6px; }
 .tank-table input[type='number'] { width: 62px; padding: 3px 5px; }
 .tank-table .with-unit em { width: 14px; }
 .tank-table select { padding: 3px 2px; max-width: 86px; }
+/* ---------- compare load cases ---------- */
+:root { --c1: #245F80; --c2: #A3195B; --c3: #2E7D4F; --c4: #B26B00; --c5: #5B4C9A; --c6: #6B7470; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme='light']) { --c1: #8EBCD6; --c2: #E36A9F; --c3: #6CC487; --c4: #E3B45B; --c5: #A99BE0; --c6: #A7B2AC; } }
+:root[data-theme='dark'] { --c1: #8EBCD6; --c2: #E36A9F; --c3: #6CC487; --c4: #E3B45B; --c5: #A99BE0; --c6: #A7B2AC; }
+.pick-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.pick-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 8px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface); cursor: pointer; max-width: 340px; font-size: 0.8125rem; transition: border-color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease); }
+.pick-chip:hover { border-color: var(--border-strong); }
+.pick-chip.on { border-color: var(--accent); background: var(--accent-soft); }
+.pick-chip .pick-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pick-no { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 4px; border-radius: var(--r-sm); background: var(--primary); color: var(--on-primary); font: 600 0.6875rem/1 var(--mono); margin-right: 4px; animation: pop var(--t-med) var(--ease); }
+.grid.compare th.case-col { vertical-align: top; min-width: 150px; max-width: 220px; white-space: normal; }
+.case-head { display: flex; gap: 4px; align-items: flex-start; justify-content: flex-end; text-align: right; }
+.case-head button.link { font-weight: 600; text-align: right; white-space: normal; }
+.case-tools { display: flex; gap: 4px; align-items: center; justify-content: flex-end; margin-top: 4px; font-weight: 400; }
+.case-tools button.tiny { padding: 0 7px; margin: 0; }
+.grid.compare td.weak { color: var(--fail); font-weight: 650; background: var(--fail-bg); }
+.grid.compare td.cell-fail { background: var(--fail-bg); }
+.grid.compare tr.type-head td { font: 600 0.6875rem/1.3 var(--mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); background: var(--surface-2); border-top: 1px solid var(--border); }
+.chart .cmp-curve { fill: none; stroke-width: 2.2; stroke-dasharray: 1; animation: draw 700ms var(--ease) both; }
+.chart .hover-dot-plain { stroke: var(--surface); stroke-width: 2; }
