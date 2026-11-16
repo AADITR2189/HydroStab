@@ -47,6 +47,10 @@ From the volume:
   - If you leave it empty, the tank's own liquid density is used.
   - Afterwards, every load case uses FSM = i_t × the density of the liquid actually in the tank, so changing the liquid gives the correct FSM.
 - A full (pressed-up) tank has FSM = 0.
+- **Max FSM tick (per tank, in the load case):** when ticked, FSM = i_t,max × ρ_liquid **whatever the filling** (also full or empty), as booklets do for consumables. Not used with "manual total".
+  - i_t,max is the larger of: the largest i_t in the tank table, and the maximum entered for the tank.
+  - **Entered maximum:** the true maximum can fall between two sounding rows, so a maximum FSM can be entered on import (or later in Data Tables). It is stored as i_t,max = FSM_max / SG. A value below the table's largest gives a warning, and the table value is used.
+  - The "Maximum" free surface method uses the same i_t,max for every slack tank.
 - Checks:
   - A volume above capacity is an error.
   - A filling between 98 % and 100 % gives a warning.

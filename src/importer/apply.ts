@@ -10,7 +10,9 @@ export interface ApplyOptions {
   trim: number;
   /** KN: heel angle of each KN column, in column order */
   angles?: number[];
-  tank?: { name: string; group: TankGroup; density: number; isConsumable: boolean; type?: string; fsmDensity?: number };
+  tank?: { name: string; group: TankGroup; density: number; isConsumable: boolean; type?: string; fsmDensity?: number;
+    /** maximum FSM of the tank (t·m at the FSM SG), entered separately: the true maximum can fall between two table rows */
+    maxFsm?: number };
 }
 
 export interface Provenance {
@@ -65,6 +67,22 @@ function inertiaOf(r: Conversion['rows'][number], o: ApplyOptions) {
   const f = n(r, 'fsm');
   const sg = o.tank?.fsmDensity ?? o.tank?.density;
   return f !== undefined && sg ? f / sg : 0;
+}
+
+/** Maximum inertia from an entered maximum FSM (t·m ÷ SG of the FSM). */
+export function maxInertiaOf(o: ApplyOptions): number | undefined {
+  const m = o.tank?.maxFsm, sg = o.tank?.fsmDensity ?? o.tank?.density;
+  return m !== undefined && m > 0 && sg ? m / sg : undefined;
+}
+
+/** Check of an entered maximum FSM against the table. */
+export function maxFsmCheck(c: Conversion, o: ApplyOptions): Check | null {
+  const mi = maxInertiaOf(o);
+  if (mi === undefined) return null;
+  const sg = (o.tank?.fsmDensity ?? o.tank?.density)!;
+  const tableMax = Math.max(0, ...c.rows.map((r) => inertiaOf(r, o)));
+  if (mi + 1e-9 < tableMax) return { level: 'warn', title: `Entered max FSM ${o.tank!.maxFsm} t·m is less than the largest in the table (${(tableMax * sg).toFixed(1)} t·m)`, detail: 'The larger value (the table) is used for "max FSM". Check the entry.' };
+  return { level: 'ok', title: `Max FSM ${o.tank!.maxFsm} t·m entered (i_T = ${mi.toFixed(2)} m⁴ at SG ${sg}); the table's largest is ${(tableMax * sg).toFixed(1)} t·m`, detail: 'Used when "max FSM" is ticked for this tank in a load case, and by the "Maximum" free surface method.' };
 }
 
 /** A table that gives FSM (t·m) instead of i_T: say at which SG it is turned into i_T = FSM / SG. */
@@ -159,8 +177,10 @@ export function applyToVessel(kind: DatasetKind, v0: Vessel, c: Conversion, o: A
   if (kind === 'TANK') {
     const t = o.tank!;
     const cal = c.rows.map((r) => ({ ...(n(r, 'sounding') !== undefined ? { sounding: n(r, 'sounding') } : {}), volume: n(r, 'volume')!, lcg: n(r, 'lcg')!, tcg: n(r, 'tcg')!, vcg: n(r, 'vcg')!, inertia: inertiaOf(r, o) }));
-    const prevType = t.type ?? v.tanks.find((x) => x.name === t.name)?.type;
-    const tank: Tank = { id: t.name, name: t.name, ...(prevType ? { type: prevType } : {}), group: t.group, density: t.density, isConsumable: t.isConsumable, capacity: Math.max(...cal.map((x) => x.volume)), calibration: cal };
+    const prev = v.tanks.find((x) => x.name === t.name);
+    const prevType = t.type ?? prev?.type;
+    const maxI = maxInertiaOf(o) ?? prev?.maxInertia;
+    const tank: Tank = { id: t.name, name: t.name, ...(prevType ? { type: prevType } : {}), group: t.group, density: t.density, isConsumable: t.isConsumable, capacity: Math.max(...cal.map((x) => x.volume)), calibration: cal, ...(maxI !== undefined ? { maxInertia: maxI } : {}) };
     v.tanks = [...v.tanks.filter((x) => x.name !== t.name), tank];
   }
   if (kind === 'WINDAGE') {

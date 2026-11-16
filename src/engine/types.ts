@@ -59,6 +59,8 @@ export interface Tank {
   density: number;        // default liquid density t/m³
   isConsumable: boolean;
   calibration: TankCalRow[];
+  /** maximum free-surface inertia i_T (m⁴), when entered separately (the true maximum can fall between two table rows) */
+  maxInertia?: number;
   /** simple box outline for diagrams: x1,x2,y1,y2,z1,z2 */
   box?: [number, number, number, number, number, number];
 }
@@ -131,6 +133,8 @@ export type TankInput =
 export interface TankStatus {
   input: TankInput;
   density?: number; // overrides tank default
+  /** use the maximum free surface moment of this tank, whatever its filling */
+  maxFsm?: boolean;
 }
 
 export interface WeightItem {
@@ -192,6 +196,8 @@ export interface TankResult {
   tcg: number;
   vcg: number;
   fsm: number;
+  /** the maximum FSM was used for this tank */
+  fsmMax?: boolean;
 }
 
 export interface GzPoint {

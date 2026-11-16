@@ -61,6 +61,17 @@ export function LoadCaseEditor({ vessel, lc, r, onChange, customGroups, onCreate
     set({ tanks: { ...lc.tanks, [tankId]: { ...lc.tanks[tankId], input } } });
   };
 
+  /** tick / untick "max FSM" for some tanks */
+  const setMaxFsm = (ids: string[], on: boolean) => {
+    const tanks = { ...lc.tanks };
+    for (const id of ids) {
+      const cur = tanks[id] ?? { input: { mode: 'VOLUME' as const, value: 0 } };
+      const next = { ...cur };
+      if (on) next.maxFsm = true; else delete next.maxFsm;
+      tanks[id] = next;
+    }
+    set({ tanks });
+  };
   const setTankValue = (tankId: string, value: number) => {
     const cur = lc.tanks[tankId]?.input ?? { mode: 'VOLUME', value: 0 };
     if (cur.mode === 'FILLED') return;
@@ -141,18 +152,18 @@ export function LoadCaseEditor({ vessel, lc, r, onChange, customGroups, onCreate
       <section className="panel">
         <div className="panel-head"><h2>Tanks</h2>
           <span className="form-row" style={{ gap: 8, alignItems: 'center' }}>
-            <span className="muted">Choose how you enter each tank. The rest is calculated.</span>
+            <span className="muted">Choose how you enter each tank. The rest is calculated. Tick <b>Max FSM</b> where the maximum free surface moment is to be used (e.g. consumables).</span>
             <button className="ghost tiny" onClick={() => setCollapsed(new Set(tankTypes(vessel).map((t) => t.name)))}>Collapse all</button>
             <button className="ghost tiny" onClick={() => setCollapsed(new Set())}>Expand all</button>
           </span>
         </div>
         <div className="table-wrap">
-          <table className="grid">
+          <table className="grid tank-table">
             <thead>
               <tr>
-                <th>Tank</th><th>Input method</th><th className="num">Value</th><th className="num">Density</th>
-                <th className="num">%</th><th className="num">Volume m³</th><th className="num">Weight t</th>
-                <th className="num">LCG m</th><th className="num">VCG m</th><th className="num">FSM t·m</th>
+                <th>Tank</th><th className="center" title="Use the maximum free surface moment of the tank, whatever its filling">Max FSM</th><th>Input method</th><th className="num">Value</th><th className="num">Density</th>
+                <th className="num">%</th><th className="num">Volume m³</th><th className="num">Weight t</th><th className="num">FSM t·m</th>
+                <th className="num">LCG m</th><th className="num">VCG m</th>
               </tr>
             </thead>
             <tbody>
@@ -164,11 +175,18 @@ export function LoadCaseEditor({ vessel, lc, r, onChange, customGroups, onCreate
                 return (
                   <Fragment key={g.type.name}>
                     <tr className="type-head" style={{ ['--type-color' as string]: g.type.color }}>
-                      <td colSpan={10}>
+                      <td>
                         <button className="link" onClick={() => setCollapsed((c) => { const n = new Set(c); if (n.has(g.type.name)) n.delete(g.type.name); else n.add(g.type.name); return n; })} aria-expanded={!closed}>
                           {closed ? '▸' : '▾'} <span className="dot" style={{ background: g.type.color }} />{g.type.name}
                         </button>
-                        <span className="muted small"> · {g.items.length} tank{g.items.length > 1 ? 's' : ''} · {catLabel(vessel, g.type.category).toLowerCase()}{g.type.consumable ? ' · consumable' : ''}{closed && r ? ` · ${f(tot.weight, 1)} t, ${f(cap > 0 ? (tot.volume / cap) * 100 : 0, 0)} % full` : ''}</span>
+                      </td>
+                      <td className="center">{lc.fsmMethod !== 'MANUAL_TOTAL' && (() => {
+                        const all = g.items.every((t) => lc.tanks[t.id]?.maxFsm), some = g.items.some((t) => lc.tanks[t.id]?.maxFsm);
+                        return <input type="checkbox" checked={all} ref={(el) => { if (el) el.indeterminate = some && !all; }} aria-label={`Max FSM for all ${g.type.name} tanks`} title={`Max FSM for all ${g.type.name} tanks`}
+                          onChange={() => setMaxFsm(g.items.map((t) => t.id), !all)} />;
+                      })()}</td>
+                      <td colSpan={9}>
+                        <span className="muted small">{g.items.length} tank{g.items.length > 1 ? 's' : ''} · {catLabel(vessel, g.type.category).toLowerCase()}{g.type.consumable ? ' · consumable' : ''}{closed && r ? ` · ${f(tot.weight, 1)} t, ${f(cap > 0 ? (tot.volume / cap) * 100 : 0, 0)} % full` : ''}</span>
                       </td>
                     </tr>
                     {!closed && g.items.map((t) => {
@@ -178,6 +196,9 @@ export function LoadCaseEditor({ vessel, lc, r, onChange, customGroups, onCreate
                 return (
                   <tr key={t.id}>
                     <td className="tank-name">{t.name}</td>
+                    <td className="center">{lc.fsmMethod === 'MANUAL_TOTAL' ? <span className="muted small" title="Total FSM entered manually">—</span> : (
+                      <input type="checkbox" checked={!!lc.tanks[t.id]?.maxFsm} aria-label={`Max FSM for ${t.name}`} onChange={(e) => setMaxFsm([t.id], e.target.checked)} />
+                    )}</td>
                     <td>
                       <select value={st.mode} onChange={(e) => setTankMode(t.id, e.target.value as TankInput['mode'])}>
                         {MODES.filter((m) => m.value !== 'SOUNDING' || t.calibration.every((c) => c.sounding !== undefined)).map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
@@ -195,23 +216,24 @@ export function LoadCaseEditor({ vessel, lc, r, onChange, customGroups, onCreate
                       <NumInput
                         value={lc.tanks[t.id]?.density ?? t.density}
                         step={0.001}
-                        onCommit={(v) => set({ tanks: { ...lc.tanks, [t.id]: { input: st, density: v } } })}
+                        onCommit={(v) => set({ tanks: { ...lc.tanks, [t.id]: { ...lc.tanks[t.id], input: st, density: v } } })}
                       />
                     </td>
                     <td className={`num ${tr && tr.percent > 98 ? 'warn-text' : ''}`}>{f(tr?.percent, 1)}</td>
                     <td className="num">{f(tr?.volume, 1)}</td>
                     <td className="num">{f(tr?.weight, 1)}</td>
+                    <td className="num">{f(tr?.fsm, 0)}{tr?.fsmMax && <span className="max-tag" title="Maximum free surface moment of the tank">max</span>}</td>
                     <td className="num">{f(tr?.lcg, 2)}</td>
                     <td className="num">{f(tr?.vcg, 2)}</td>
-                    <td className="num">{f(tr?.fsm, 0)}</td>
+
                   </tr>
                 );
 })}
                     {!closed && r && (
                       <tr className="type-total">
-                        <td colSpan={4}>Subtotal {g.type.name}</td>
-                        <td className="num">{f(cap > 0 ? (tot.volume / cap) * 100 : 0, 1)}</td><td className="num">{f(tot.volume, 1)}</td><td className="num">{f(tot.weight, 1)}</td>
-                        <td className="num">{tot.weight > 0 ? f(tot.lcg, 2) : '—'}</td><td className="num">{tot.weight > 0 ? f(tot.vcg, 2) : '—'}</td><td className="num">{f(tot.fsm, 0)}</td>
+                        <td colSpan={5}>Subtotal {g.type.name}</td>
+                        <td className="num">{f(cap > 0 ? (tot.volume / cap) * 100 : 0, 1)}</td><td className="num">{f(tot.volume, 1)}</td><td className="num">{f(tot.weight, 1)}</td><td className="num">{f(tot.fsm, 0)}</td>
+                        <td className="num">{tot.weight > 0 ? f(tot.lcg, 2) : '—'}</td><td className="num">{tot.weight > 0 ? f(tot.vcg, 2) : '—'}</td>
                       </tr>
                     )}
                   </Fragment>

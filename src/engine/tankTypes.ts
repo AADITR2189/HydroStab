@@ -8,12 +8,12 @@ export interface TankTypeDef { name: string; category: TankGroup; color: string;
 export interface TankCategoryDef { id: string; label: string; color: string; consumable: boolean }
 
 export const BUILTIN_CATEGORIES: TankCategoryDef[] = [
-  { id: 'BALLAST', label: 'Ballast', color: '#4FC3F7', consumable: false },
-  { id: 'FUEL_OIL', label: 'Fuel oil', color: '#F45B0B', consumable: true },
-  { id: 'DIESEL_OIL', label: 'Diesel oil', color: '#FFB74D', consumable: true },
-  { id: 'LUB_OIL', label: 'Lub oil', color: '#C792EA', consumable: true },
-  { id: 'FRESH_WATER', label: 'Fresh water', color: '#4ADE80', consumable: true },
-  { id: 'MISC', label: 'Other', color: '#A8C9C8', consumable: false },
+  { id: 'BALLAST', label: 'Ballast', color: '#4F86A6', consumable: false },
+  { id: 'FUEL_OIL', label: 'Fuel oil', color: '#A9553B', consumable: true },
+  { id: 'DIESEL_OIL', label: 'Diesel oil', color: '#B98A3A', consumable: true },
+  { id: 'LUB_OIL', label: 'Lub oil', color: '#7D6A9E', consumable: true },
+  { id: 'FRESH_WATER', label: 'Fresh water', color: '#3F8C78', consumable: true },
+  { id: 'MISC', label: 'Other', color: '#7C8580', consumable: false },
 ];
 export const CATEGORIES: TankGroup[] = BUILTIN_CATEGORIES.map((c) => c.id);
 /** Labels of the built-in categories (also used for default type names). */

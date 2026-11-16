@@ -158,6 +158,8 @@ export interface TankImport {
   type: string;
   group: TankGroup;
   density: number | '';
+  /** maximum FSM (t·m) entered by hand, optional */
+  maxFsm?: number | '';
   consumable: boolean;
   block: TankBlock;
   refs: RowRef[];

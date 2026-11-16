@@ -59,6 +59,8 @@ export function resolveTank(
   }
 
   const weight = volume * density;
+  /** largest inertia: the value entered for the tank if any, else the largest in the table */
+  const maxInertia = Math.max(tank.maxInertia ?? 0, ...cal.map((r) => r.inertia));
   let lcg = 0, tcg = 0, vcg = 0, fsm = 0;
   if (volume > 0) {
     const label = `${tank.name} calibration`;
@@ -69,11 +71,14 @@ export function resolveTank(
     if (slack && fsmMethod !== 'MANUAL_TOTAL') {
       const inertia =
         fsmMethod === 'MAXIMUM'
-          ? Math.max(...cal.map((r) => r.inertia))
+          ? maxInertia
           : lerp(vols, cal.map((r) => r.inertia), volume, label);
       fsm = inertia * density;
     }
   }
 
-  return { tankId: tank.id, name: tank.name, mode: input.mode, volume, weight, percent, density, lcg, tcg, vcg, fsm };
+  // ticked in the load case: maximum FSM of the tank at any filling (e.g. consumables as in the booklet)
+  const fsmMax = !!status?.maxFsm && fsmMethod !== 'MANUAL_TOTAL';
+  if (fsmMax) fsm = maxInertia * density;
+  return { tankId: tank.id, name: tank.name, mode: input.mode, volume, weight, percent, density, lcg, tcg, vcg, fsm, ...(fsmMax ? { fsmMax } : {}) };
 }

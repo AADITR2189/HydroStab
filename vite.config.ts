@@ -17,8 +17,8 @@ export default defineConfig({
         short_name: 'StabilitySoft',
         description: 'Vessel intact stability: loading conditions, IMO IS Code 2008 and class criteria, GZ curves, reports. Works offline.',
         lang: 'en',
-        theme_color: '#1463D6',
-        background_color: '#F3F5F8',
+        theme_color: '#22302B',
+        background_color: '#E7EBE5',
         display: 'standalone',
         orientation: 'any',
         start_url: './',
@@ -32,7 +32,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest,woff2}'],
         navigateFallback: 'index.html',
         // text recognition files (≈ 11 MB) are not pre-installed: cached on first use, then offline
         globIgnores: ['ocr/**'],

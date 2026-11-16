@@ -6,7 +6,7 @@ import type { UserVesselEntry } from '../importer/dbFile';
 import type { SourceDoc } from '../importer/sources';
 import { datasetDef } from '../importer/datasets';
 import { autoMapping, editCell, numVal, type Mapping } from '../importer/convert';
-import { applyToVessel, compareRows, fsmBasisCheck, expectedRows, storedRows, type Provenance } from '../importer/apply';
+import { applyToVessel, compareRows, fsmBasisCheck, maxFsmCheck, expectedRows, storedRows, type Provenance } from '../importer/apply';
 import { buildTankImports, DEFAULT_TITLE, parseTitle, splitTanks, tankChecks, type SplitMethod, type TankImport } from '../importer/multiTank';
 import type { Check } from '../importer/checks';
 import { ReviewTable, SourceGrid } from './ImportTables';
@@ -44,7 +44,7 @@ export function MultiTankSection({ doc, vessel, target, save }: Props) {
   const [confirm, setConfirm] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
 
-  const checks = useMemo(() => new Map<string, Check[]>(imports.map((t) => { const fb = fsmBasisCheck(t.conv, typeof t.density === 'number' ? t.density : undefined, fsmSG === '' ? undefined : fsmSG); return [t.key, [...(fb ? [fb] : []), ...tankChecks(t, vessel, imports)]]; })), [imports, vessel, fsmSG]);
+  const checks = useMemo(() => new Map<string, Check[]>(imports.map((t) => { const dens = typeof t.density === 'number' ? t.density : undefined; const fb = fsmBasisCheck(t.conv, dens, fsmSG === '' ? undefined : fsmSG); const mx = maxFsmCheck(t.conv, { trim: 0, tank: { name: t.name, group: t.group, density: dens ?? 0, isConsumable: t.consumable, fsmDensity: fsmSG === '' ? undefined : fsmSG, maxFsm: typeof t.maxFsm === 'number' ? t.maxFsm : undefined } }); return [t.key, [...(fb ? [fb] : []), ...(mx ? [mx] : []), ...tankChecks(t, vessel, imports)]]; })), [imports, vessel, fsmSG]);
   const inc = imports.filter((t) => t.include);
   const withErr = inc.filter((t) => checks.get(t.key)!.some((c) => c.level === 'error'));
   const withWarn = inc.filter((t) => checks.get(t.key)!.some((c) => c.level === 'warn'));
@@ -74,7 +74,7 @@ export function MultiTankSection({ doc, vessel, target, save }: Props) {
     const prov: Record<string, Provenance> = { ...target.provenance };
     let rows = 0, values = 0;
     for (const t of inc) {
-      const o = { trim: 0, tank: { name: t.name.trim(), group: t.group, density: t.density as number, isConsumable: t.consumable, type: t.type.trim().toUpperCase() || undefined, fsmDensity: fsmSG === '' ? undefined : fsmSG } };
+      const o = { trim: 0, tank: { name: t.name.trim(), group: t.group, density: t.density as number, isConsumable: t.consumable, type: t.type.trim().toUpperCase() || undefined, fsmDensity: fsmSG === '' ? undefined : fsmSG, maxFsm: typeof t.maxFsm === 'number' ? t.maxFsm : undefined } };
       try { v = applyToVessel('TANK', v, t.conv, o); } catch (e) { setResult({ ok: false, text: `${t.name}: ${e instanceof Error ? e.message : e}. Nothing was stored.` }); return; }
       const exp = expectedRows('TANK', t.conv, o);
       const cmp = compareRows(exp, storedRows('TANK', v, o), false);
@@ -163,7 +163,7 @@ export function MultiTankSection({ doc, vessel, target, save }: Props) {
           <p className="muted small">Types in this import: {[...new Set(inc.map((t) => t.type))].map((ty) => `${ty} (${inc.filter((t) => t.type === ty).length})`).join(' · ')}</p>
           <div className="table-wrap tall">
             <table className="grid tank-list">
-              <thead><tr><th>Include</th><th>Tank</th><th>Source</th><th>Type</th><th>Category</th><th className="num">Density t/m³</th><th>Cons.</th><th className="num">Rows</th><th className="num">Capacity m³</th><th>In vessel</th><th>Checks</th><th>Compared</th><th /></tr></thead>
+              <thead><tr><th>Include</th><th>Tank</th><th>Source</th><th>Type</th><th>Category</th><th className="num">Density t/m³</th><th className="num" title="Optional. The true maximum free surface moment, when it falls between two rows of the table.">Max FSM t·m</th><th>Cons.</th><th className="num">Rows</th><th className="num">Capacity m³</th><th>In vessel</th><th>Checks</th><th>Compared</th><th /></tr></thead>
               <tbody>
                 {imports.map((t) => {
                   const cs = checks.get(t.key)!;
@@ -178,6 +178,7 @@ export function MultiTankSection({ doc, vessel, target, save }: Props) {
                       <td><input type="text" list="mt-types" value={t.type} onChange={(ev) => { const ty = ev.target.value.toUpperCase(); const k = tankTypes(vessel).find((x) => x.name === ty); upd(t.key, { type: ty, ...(k ? { group: k.category } : {}) }); }} aria-label={`${t.name} type`} /></td>
                       <td><select value={t.group} onChange={(ev) => upd(t.key, { group: ev.target.value as TankGroup })}>{categories(vessel).map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}</select></td>
                       <td className="num"><input type="number" step="any" value={t.density} onChange={(ev) => upd(t.key, { density: ev.target.value === '' ? '' : Number(ev.target.value) })} aria-label={`${t.name} density`} /></td>
+                      <td className="num"><input type="number" step="any" placeholder="optional" value={t.maxFsm ?? ''} onChange={(ev) => upd(t.key, { maxFsm: ev.target.value === '' ? '' : Number(ev.target.value) })} aria-label={`${t.name} maximum FSM`} /></td>
                       <td><input type="checkbox" checked={t.consumable} onChange={(ev) => upd(t.key, { consumable: ev.target.checked })} aria-label={`${t.name} consumable`} /></td>
                       <td className="num">{t.conv.rows.length}</td>
                       <td className="num">{cap.toFixed(2)}</td>

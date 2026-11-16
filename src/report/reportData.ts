@@ -44,7 +44,8 @@ export function particularsRows(v: Vessel): [string, string][] {
 }
 
 export function conditionRows(v: Vessel, lc: LoadCase, r: Results): [string, string][] {
-  const fsmLabel = lc.fsmMethod === 'ACTUAL' ? 'actual filling' : lc.fsmMethod === 'MAXIMUM' ? 'maximum per tank' : 'total entered manually';
+  const nMax = r.tanks.filter((t) => t.fsmMax).length;
+  const fsmLabel = (lc.fsmMethod === 'ACTUAL' ? 'actual filling' : lc.fsmMethod === 'MAXIMUM' ? 'maximum per tank' : 'total entered manually') + (nMax && lc.fsmMethod !== 'MAXIMUM' ? `; maximum for ${nMax} tank${nMax > 1 ? 's' : ''}` : '');
   return [
     ['Displacement Δ', `${n(r.displacement, 2)} t`], ['Deadweight', `${n(r.deadweight, 2)} t`], ['Sea water density', `${n(lc.seaDensity, 3)} t/m³`],
     ['Draft at AP', `${n(r.draftAP, 3)} m`], ['Draft at midship', `${n(r.draftMS, 3)} m`], ['Draft at FP', `${n(r.draftFP, 3)} m`],
@@ -70,7 +71,7 @@ export function weightRows(r: Results): string[][] {
 }
 
 export function tankRows(r: Results): string[][] {
-  return r.tanks.filter((t) => t.volume > 1e-9).map((t) => [t.name, t.mode.toLowerCase(), n(t.percent, 1), n(t.volume, 2), n(t.density, 3), n(t.weight, 2), n(t.lcg, 3), n(t.tcg, 3), n(t.vcg, 3), n(t.fsm, 1)]);
+  return r.tanks.filter((t) => t.volume > 1e-9 || t.fsm > 1e-9).map((t) => [t.name, t.mode.toLowerCase(), n(t.percent, 1), n(t.volume, 2), n(t.density, 3), n(t.weight, 2), n(t.lcg, 3), n(t.tcg, 3), n(t.vcg, 3), `${n(t.fsm, 1)}${t.fsmMax ? ' (max)' : ''}`]);
 }
 
 /** Tank status split by tank type: a heading row per type, its non-empty tanks, and a subtotal row. */
@@ -78,11 +79,11 @@ export function tankRowsByType(v: Vessel, r: Results): { kind: 'head' | 'tank' |
   const out: { kind: 'head' | 'tank' | 'total'; cells: string[] }[] = [];
   for (const g of groupByType(v, v.tanks, (t) => t)) {
     const rs = g.items.map((t) => r.tanks.find((x) => x.tankId === t.id)).filter((x): x is NonNullable<typeof x> => !!x);
-    const full = rs.filter((t) => t.volume > 1e-9);
+    const full = rs.filter((t) => t.volume > 1e-9 || t.fsm > 1e-9); // an empty tank can still carry a max FSM
     const tot = typeTotals(rs);
     const cap = g.items.reduce((s, t) => s + t.capacity, 0);
     out.push({ kind: 'head', cells: [`${g.type.name} (${g.items.length} tank${g.items.length > 1 ? 's' : ''}${full.length < rs.length ? `, ${rs.length - full.length} empty` : ''})`, '', '', '', '', '', '', '', '', ''] });
-    for (const t of full) out.push({ kind: 'tank', cells: [t.name, t.mode.toLowerCase(), n(t.percent, 1), n(t.volume, 2), n(t.density, 3), n(t.weight, 2), n(t.lcg, 3), n(t.tcg, 3), n(t.vcg, 3), n(t.fsm, 1)] });
+    for (const t of full) out.push({ kind: 'tank', cells: [t.name, t.mode.toLowerCase(), n(t.percent, 1), n(t.volume, 2), n(t.density, 3), n(t.weight, 2), n(t.lcg, 3), n(t.tcg, 3), n(t.vcg, 3), `${n(t.fsm, 1)}${t.fsmMax ? ' (max)' : ''}`] });
     out.push({ kind: 'total', cells: [`Subtotal ${g.type.name}`, '', n(cap > 0 ? (tot.volume / cap) * 100 : 0, 1), n(tot.volume, 2), '', n(tot.weight, 2), tot.weight > 0 ? n(tot.lcg, 3) : '—', tot.weight > 0 ? n(tot.tcg, 3) : '—', tot.weight > 0 ? n(tot.vcg, 3) : '—', n(tot.fsm, 1)] });
   }
   return out;

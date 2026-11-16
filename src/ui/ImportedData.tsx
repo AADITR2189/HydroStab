@@ -1,7 +1,7 @@
 // Imported Data: every data set of the vessel in one place, with where it came from, who verified
 // it, the edit history, the full table, and an editor (checks + read-back + change log on save).
 import { useMemo, useState } from 'react';
-import type { Vessel } from '../engine/types';
+import type { Tank, Vessel } from '../engine/types';
 import type { VesselEntry } from '../data/vessels';
 import type { UserVesselEntry } from '../importer/dbFile';
 import type { Provenance } from '../importer/apply';
@@ -124,6 +124,37 @@ function withEdit(u: UserVesselEntry, key: string, vessel: Vessel, by: string, r
   return { ...u, vessel, provenance: { ...u.provenance, [key]: pr } };
 }
 
+/** Maximum FSM of a tank: largest of the table, or a value entered when the true maximum falls between two rows. */
+function MaxFsmRow({ tank, mine }: { tank: Tank; mine?: (t: Tank, by: string, why: string, change: string) => void }) {
+  const tableMax = Math.max(0, ...tank.calibration.map((r) => r.inertia));
+  const used = Math.max(tableMax, tank.maxInertia ?? 0);
+  const [open, setOpen] = useState(false);
+  const [val, setVal] = useState<number | ''>(tank.maxInertia ? Number((tank.maxInertia * tank.density).toFixed(2)) : '');
+  const [sg, setSg] = useState<number>(tank.density);
+  const [by, setBy] = useState('');
+  return (
+    <div className="notice" style={{ marginBottom: 10 }}>
+      <b>Max FSM</b> (used when "max FSM" is ticked in a load case): {(used * tank.density).toFixed(1)} t·m at ρ {tank.density} (i_T {used.toFixed(2)} m⁴)
+      <span className="muted"> · {tank.maxInertia && tank.maxInertia > tableMax ? `entered value; the table's largest is ${(tableMax * tank.density).toFixed(1)} t·m` : 'largest value in the table'}</span>
+      {mine && !open && <button className="ghost tiny" style={{ marginLeft: 8 }} onClick={() => setOpen(true)}>{tank.maxInertia ? 'Change' : 'Enter max FSM'}</button>}
+      {mine && open && (
+        <div className="form-row" style={{ marginTop: 8, alignItems: 'flex-end' }}>
+          <label>Max FSM t·m<input type="number" step="any" value={val} onChange={(e) => setVal(e.target.value === '' ? '' : Number(e.target.value))} placeholder="empty = from table" /></label>
+          <label>at SG<input type="number" step="any" value={sg} onChange={(e) => setSg(Number(e.target.value))} /></label>
+          <label>Your name<input value={by} onChange={(e) => setBy(e.target.value)} /></label>
+          <button disabled={!by.trim() || !(sg > 0)} onClick={() => {
+            const nv: Tank = { ...tank };
+            if (val === '' || !(val > 0)) delete nv.maxInertia; else nv.maxInertia = val / sg;
+            mine(nv, by.trim(), 'maximum free surface moment entered', val === '' ? 'max FSM: from the table' : `max FSM ${val} t·m at SG ${sg} (i_T ${(val / sg).toFixed(3)} m⁴)`);
+            setOpen(false);
+          }}>Save</button>
+          <button className="ghost" onClick={() => setOpen(false)}>Cancel</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function TableDataset({ ref_, v, mine, save, editing, setEditing, onDeleted }: {
   ref_: DsRef; v: Vessel; mine?: UserVesselEntry; save: (u: UserVesselEntry) => void; editing: boolean; setEditing: (b: boolean) => void; onDeleted: () => void;
 }) {
@@ -185,6 +216,9 @@ function TableDataset({ ref_, v, mine, save, editing, setEditing, onDeleted }: {
         </span>
       </div>
       {msg && <div className={msg.ok ? 'notice ok-notice' : 'error-box'} role="status" style={{ marginBottom: 8 }}>{msg.text}</div>}
+      {tank && <MaxFsmRow tank={tank} mine={mine ? (nv, by2, why, change) => save(withEdit(mine, ref.key, { ...structuredClone(v), tanks: v.tanks.map((t) => (t.name === tank.name ? nv : t)) }, by2, why, [change], () => ({
+        dataset: ref.key, method: 'TYPED', fileName: 'Entered in Data Tables', fileSha256: '', location: 'Data Tables editor', rows: 0, values: 1, editedCells: 1, checks: { errors: 0, warnings: 0 }, storedCheck: 'max FSM entered', verifiedBy: by2, verifiedAt: new Date().toISOString(),
+      }))) : undefined} />}
       <ul className="checks">{checks.map((c, i) => <li key={i} className={c.level}><span className="mark">{c.level === 'ok' ? '✓' : c.level === 'warn' ? '!' : '✗'}</span><span><b>{c.title}</b>{c.detail && <span className="muted"> · {c.detail}</span>}</span></li>)}</ul>
       {!before.length && !editing && <p className="muted">No rows. {mine ? 'Use Edit to type them, or Import Data.' : ''}</p>}
       <div className="table-wrap tall">
