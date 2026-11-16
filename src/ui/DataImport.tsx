@@ -21,6 +21,7 @@ import { looksLikeOpeningLines, splitOpeningLines } from '../importer/openingsLi
 import { WindageBookletSection } from './WindageBooklet';
 import { ReviewTable, SourceGrid } from './ImportTables';
 import type { KvKind } from '../importer/keyValue';
+import { Icon } from './Icon';
 
 interface Props {
   entries: VesselEntry[];
@@ -236,7 +237,7 @@ export function DataImportScreen(p: Props) {
         <p className="muted small">{isTrims ? `Every ${mode === 'HYDRO_ALL' ? 'hydrostatic' : 'cross curve (KN)'} table of the file in one go, one per trim: booklet pages with a trim title line ("No Trim", "Trim: aft 0.500/57.400", "Trim fwd 1.000"), one Excel sheet per trim, or one long table with a trim column. Columns are mapped once; each trim is checked and stored with its own record.` : isWindBk ? 'Booklets often have no windage table: each loading condition shows the wind heeling moment derivation (parts with area LPA, height HCP above the waterline, lever). With the draft of each condition this gives one windage row per draft. The printed total moment is re-calculated as a check.' : isMulti ? 'Every tank calibration table in the file in one go: the booklet tank pages, an Excel workbook with one sheet per tank, or one long table with a tank-name column. Columns are mapped once; each tank is checked on its own and stored with its own record.' : isKv ? (mode === 'PARTICULARS' ? 'Ship name, IMO, call sign, LBP, breadth, depth, draft, density and bilge keel area are found by their labels (e.g. "LBP ...... 57.400 m"). Fields not in the source keep their present value.' : 'Lightship weight, LCG, TCG and VCG found by their labels (e.g. "Lightship LCG = 0.592 m AFT of MIDSHIP"). Words like aft / fwd of midship and port / starboard are understood.') : def.help}</p>
         {(isKv || kind !== 'WEIGHTS') && !target && (
           <div className="notice warn-notice">
-            <b>{p.current.vessel.name}</b> is a built-in vessel and cannot be changed. Make your own copy to import into, or create a new vessel in Vessel Database.
+            <b>{p.current.vessel.name}</b> is a built-in vessel and cannot be changed. Make your own copy to import into, or create a new vessel in Vessels.
             <div style={{ marginTop: 8 }}><button onClick={() => p.openVessel(p.makeCopy(p.current))}>Make my copy of {p.current.vessel.name}</button></div>
           </div>
         )}
@@ -256,14 +257,14 @@ export function DataImportScreen(p: Props) {
         </div>
         {reading && <p className="muted">Reading file…</p>}
         {readErr && <div className="error-box">{readErr}</div>}
-        {doc?.warnings.map((w) => <p key={w} className="warn-text small">⚠ {w}</p>)}
+        {doc?.warnings.map((w) => <p key={w} className="warn-text small"><Icon name="alert" /> {w}</p>)}
         {doc && doc.ocrPages && (doc.scannedPages?.length ?? 0) > 0 && <OcrPanel doc={doc} onDone={(tables) => {
           const pages = new Set(tables.map((t) => t.page));
           const nd: SourceDoc = { ...doc, tables: [...doc.tables.filter((t) => !pages.has(t.page)), ...tables].sort((a, b) => (a.page ?? 0) - (b.page ?? 0)), scannedPages: (doc.scannedPages ?? []).filter((p2) => !pages.has(p2)) };
           setDoc(nd);
           if (tables[0]) setTableId(tables[0].id);
         }} />}
-        {doc?.tables.some((t) => t.ocr) && <p className="warn-text small">⚠ {doc.tables.filter((t) => t.ocr).length} page(s) were read by text recognition: digits can be misread (e.g. a lost decimal point), even when the recogniser is confident. Values it was unsure of are outlined; the checks catch most other errors; compare every row with the page image.</p>}
+        {doc?.tables.some((t) => t.ocr) && <p className="warn-text small"><Icon name="alert" /> {doc.tables.filter((t) => t.ocr).length} page(s) were read by text recognition: digits can be misread (e.g. a lost decimal point), even when the recogniser is confident. Values it was unsure of are outlined; the checks catch most other errors; compare every row with the page image.</p>}
         {doc && doc.tables.length === 0 && !(doc.scannedPages?.length) && <div className="error-box">No readable text or tables found in this file.</div>}
       </section>
 

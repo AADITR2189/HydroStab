@@ -8,6 +8,7 @@ import { mergeDb, readDbFile, summarize, type DbData, type DbPreview, type UserV
 import { missingVerification, newId } from '../store';
 import { TankTypesEditor } from './TankTypesEditor';
 import { saveDatabaseFile, StoragePanel } from './AppShell';
+import { Icon } from './Icon';
 
 interface Props {
   entries: VesselEntry[];
@@ -89,7 +90,7 @@ function Provenances({ u }: { u: UserVesselEntry }) {
   return (
     <section className="panel">
       <div className="panel-head"><h2>Data record of {u.vessel.name}</h2><span className="muted small">{u.source}</span></div>
-      {list.length === 0 ? <p className="muted">No data set has been imported and verified yet. Use <b>Data Import</b>.</p> : (
+      {list.length === 0 ? <p className="muted">No data set has been imported and verified yet. Use <b>Import Data</b>.</p> : (
         <div className="table-wrap">
           <table className="grid">
             <thead><tr><th>Data set</th><th>Source</th><th>Location</th><th className="num">Rows</th><th className="num">Values</th><th>Checks</th><th>Read-back</th><th>Verified by</th></tr></thead>
@@ -167,7 +168,7 @@ export function ParticularsForm({ existing, onSave, onCancel }: { existing?: Use
   return (
     <section className="panel">
       <div className="panel-head"><h2>{existing ? `Particulars of ${existing.vessel.name}` : 'New vessel'}</h2></div>
-      <p className="muted small">Type the values here, or import them from the booklet with <b>Data Import → General particulars</b>.</p>
+      <p className="muted small">Type the values here, or import them from the booklet with <b>Import Data → General particulars</b>.</p>
       <div className="form-row">
         <label>Ship name<input value={s.name} onChange={(e) => setS({ ...s, name: e.target.value })} /></label>
         <label>IMO number<input value={s.imo} onChange={(e) => setS({ ...s, imo: e.target.value })} /></label>
@@ -190,7 +191,7 @@ export function ParticularsForm({ existing, onSave, onCancel }: { existing?: Use
         <button className="ghost" style={{ alignSelf: 'end' }} onClick={onCancel}>Cancel</button>
       </div>
       {missing.length > 0 && <p className="muted small">Still needed: {missing.join(', ')}.</p>}
-      {!existing && <p className="muted small">After creating the vessel, add the lightship (<b>Edit lightship</b>) and bring in the hydrostatics, cross curves, tanks, windage and openings with <b>Data Import</b>.</p>}
+      {!existing && <p className="muted small">After creating the vessel, add the lightship (<b>Edit lightship</b>) and bring in the hydrostatics, cross curves, tanks, windage and openings with <b>Import Data</b>.</p>}
     </section>
   );
 }
@@ -224,7 +225,7 @@ export function LightshipForm({ u, onSave, onCancel }: { u: UserVesselEntry; onS
   return (
     <section className="panel">
       <div className="panel-head"><h2>Lightship of {v.name}</h2></div>
-      <p className="muted small">One line with the totals, or several weight items (hull, machinery, outfit, …) which are added up. To import from the booklet use <b>Data Import → Lightship</b>.</p>
+      <p className="muted small">One line with the totals, or several weight items (hull, machinery, outfit, …) which are added up. To import from the booklet use <b>Import Data → Lightship</b>.</p>
       <div className="form-row">
         <label>LCG entered
           <select value={xRef} onChange={(e) => setXRef(e.target.value as 'AP' | 'MID')}><option value="AP">from AP, + forward</option><option value="MID">from midship, + forward (− aft)</option></select>
@@ -295,9 +296,9 @@ function DatabaseFile(p: Props) {
       <p className="muted small">The whole database in one file: your vessels with their data record, the load cases of every vessel, and your criteria, groups and moments.
         Now: {cur.vessels} of your vessels · {cur.loadCases} load cases · {cur.criteria} criteria · {cur.groups} groups · {cur.moments} moments. The file is sealed with a SHA-256 checksum.</p>
       <div className="form-row">
-        <button disabled={busy} onClick={save}>⬇ Save database to file</button>
+        <button disabled={busy} onClick={save}><Icon name="save" />Save database to file</button>
         <label className="ghost-file">
-          <span className="file-btn">⬆ Import database file</span>
+          <span className="file-btn"><Icon name="upload" />Import database file</span>
           <input ref={input} type="file" accept=".json,application/json" onChange={(e) => open(e.target.files?.[0])} aria-label="Import database file" />
         </label>
       </div>

@@ -1,6 +1,7 @@
 // Reports: one load case → PDF stability report and Excel workbook (same numbers in both).
 import { useState } from 'react';
 import type { LoadCase, Results, Vessel } from '../engine/types';
+import { Icon } from './Icon';
 
 interface Props {
   vessel: Vessel; status: string; source: string;
@@ -64,8 +65,8 @@ export function ReportsScreen({ vessel, status, source, cases, activeId, calc }:
           <p>Result: <span className={`badge ${res.r.overallPass ? 'pass' : 'fail'}`}>{res.r.overallPass ? 'PASS' : 'FAIL'}</span> · {res.r.groups.length} stability groups · Δ {res.r.displacement.toFixed(1)} t</p>
         ) : <div className="error-box">Cannot report this load case: {res.error}</div>}
         <div className="form-row" style={{ marginTop: 8 }}>
-          <button className="primary" disabled={!res.r || !!busy} onClick={() => make('pdf')}>{busy === 'pdf' ? 'Building…' : '⬇ Download PDF report'}</button>
-          <button disabled={!res.r || !!busy} onClick={() => make('xlsx')}>{busy === 'xlsx' ? 'Building…' : '⬇ Download Excel workbook'}</button>
+          <button className="primary" disabled={!res.r || !!busy} onClick={() => make('pdf')}>{busy === 'pdf' ? 'Building…' : <><Icon name="download" />Download PDF report</>}</button>
+          <button className="ghost" disabled={!res.r || !!busy} onClick={() => make('xlsx')}>{busy === 'xlsx' ? 'Building…' : <><Icon name="download" />Download Excel workbook</>}</button>
         </div>
         {msg && <p role="status" className={msg.kind === 'err' ? 'fail-text' : 'muted'}>{msg.text}</p>}
       </section>

@@ -65,7 +65,7 @@ export function TankTypesEditor({ u, save, onDone }: { u: UserVesselEntry; save:
     const old = prov['TANK TYPES'];
     prov['TANK TYPES'] = old
       ? { ...old, edits: [...(old.edits ?? []), { by: by.trim(), at, reason: reason.trim(), changes: all }] }
-      : { dataset: 'TANK TYPES', method: 'TYPED', fileName: 'Tank type editor', fileSha256: '', location: 'Vessel Database / Imported Data', rows: types.length, values: types.length * 5, editedCells: 0, checks: { errors: 0, warnings: 0 }, storedCheck: 'entered directly', verifiedBy: by.trim(), verifiedAt: at, edits: [{ by: by.trim(), at, reason: reason.trim(), changes: all }] };
+      : { dataset: 'TANK TYPES', method: 'TYPED', fileName: 'Tank type editor', fileSha256: '', location: 'Vessels / Data Tables', rows: types.length, values: types.length * 5, editedCells: 0, checks: { errors: 0, warnings: 0 }, storedCheck: 'entered directly', verifiedBy: by.trim(), verifiedAt: at, edits: [{ by: by.trim(), at, reason: reason.trim(), changes: all }] };
     for (const [tank, cs] of Object.entries(perTank)) {
       const k = `TANK ${tank}`;
       if (prov[k]) prov[k] = { ...prov[k], edits: [...(prov[k].edits ?? []), { by: by.trim(), at, reason: `tank types: ${reason.trim()}`, changes: cs }] };

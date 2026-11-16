@@ -15,10 +15,10 @@ const out = (n) => path.join(__dirname, '..', 'public', n);
       <div style="width:${inner}px;height:${inner}px">${svg.replace('<svg', `<svg width="${inner}" height="${inner}"`)}</div></body></html>`);
     await p.screenshot({ path: out(file), omitBackground: bg === 'transparent' });
   };
-  await shot(192, 0.04, '#16191C', 'pwa-192.png');
-  await shot(512, 0.04, '#16191C', 'pwa-512.png');
-  await shot(512, 0.16, '#16191C', 'pwa-maskable-512.png'); // safe zone for round / squircle masks
-  await shot(180, 0.08, '#16191C', 'apple-touch-icon.png');
+  await shot(192, 0.04, '#1463D6', 'pwa-192.png');
+  await shot(512, 0.04, '#1463D6', 'pwa-512.png');
+  await shot(512, 0.16, '#1463D6', 'pwa-maskable-512.png'); // safe zone for round / squircle masks
+  await shot(180, 0.08, '#1463D6', 'apple-touch-icon.png');
   await b.close();
   console.log('icons written');
 })();

@@ -5,6 +5,7 @@ import { catLabel, groupByType, tankTypes, typeTotals } from '../engine/tankType
 import { permissibleTensions, type TensionRow } from '../engine/permissibleTension';
 import { newId } from '../store';
 import { BUILTIN_GROUPS, DEFAULT_GROUP_IDS } from '../engine/criteriaGroups';
+import { Icon } from './Icon';
 import { f } from './format';
 
 const MODES: { value: TankInput['mode']; label: string; unit: string }[] = [
@@ -23,9 +24,13 @@ interface Props {
   customGroups: GroupDef[];
   /** add a new load case (arrival generator) */
   onCreate?: (lc: LoadCase) => void;
+  /** go to the results of this load case */
+  onCheck?: () => void;
 }
 
-export function LoadCaseEditor({ vessel, lc, r, onChange, customGroups, onCreate }: Props) {
+const MAIN_GROUPS = ['IS2008_GENERAL', 'IS2008_WEATHER', 'OSV_INTACT'];
+
+export function LoadCaseEditor({ vessel, lc, r, onChange, customGroups, onCreate, onCheck }: Props) {
   const [arrival, setArrival] = useState(false);
   const [fileMsg, setFileMsg] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
@@ -72,7 +77,8 @@ export function LoadCaseEditor({ vessel, lc, r, onChange, customGroups, onCreate
         <div className="panel-head"><h2>Load case</h2>
           <span className="form-row" style={{ gap: 8 }}>
             {onCreate && <button className="ghost" onClick={() => setArrival(!arrival)}>Generate arrival condition…</button>}
-            <button className="ghost" onClick={async () => setFileMsg(await exportLoadCase(vessel, lc))}>⬇ Export load case file</button>
+            <button className="ghost" onClick={async () => setFileMsg(await exportLoadCase(vessel, lc))}><Icon name="download" />Export load case file</button>
+            {onCheck && <button onClick={onCheck}>Check stability<Icon name="arrowRight" className="after" /></button>}
           </span>
         </div>
         {fileMsg && <p className="muted small" role="status">{fileMsg}</p>}
@@ -102,21 +108,29 @@ export function LoadCaseEditor({ vessel, lc, r, onChange, customGroups, onCreate
         </div>
         <fieldset className="group-select">
           <legend>Stability groups to check</legend>
-          {[...BUILTIN_GROUPS, ...customGroups].map((g) => {
+          {(() => {
             const sel = lc.criteriaGroups ?? vessel.criteriaGroups ?? DEFAULT_GROUP_IDS;
-            const on = sel.includes(g.id);
-            return (
-              <label key={g.id} className="check">
-                <input
-                  type="checkbox"
-                  id={`grp-${g.id}`}
-                  checked={on}
-                  onChange={() => set({ criteriaGroups: on ? sel.filter((x) => x !== g.id) : [...sel, g.id] })}
-                />
-                <span><strong>{g.name}</strong><br /><span className="muted small">{g.regulation}</span></span>
-              </label>
-            );
-          })}
+            const all = [...BUILTIN_GROUPS, ...customGroups];
+            const box = (g: (typeof all)[number]) => {
+              const on = sel.includes(g.id);
+              return (
+                <label key={g.id} className="check">
+                  <input type="checkbox" id={`grp-${g.id}`} checked={on} onChange={() => set({ criteriaGroups: on ? sel.filter((x) => x !== g.id) : [...sel, g.id] })} />
+                  <span><strong>{g.name}</strong><br /><span className="muted small">{g.regulation}</span></span>
+                </label>
+              );
+            };
+            // the usual groups and those in use first; special operations and superseded rules one step deeper
+            const main = all.filter((g) => MAIN_GROUPS.includes(g.id) || sel.includes(g.id) || customGroups.some((c) => c.id === g.id));
+            const rest = all.filter((g) => !main.includes(g));
+            const old = rest.filter((g) => /superseded/i.test(g.name));
+            const special = rest.filter((g) => !old.includes(g));
+            return <>
+              {main.map(box)}
+              {special.length > 0 && <details className="more"><summary>Special operations ({special.length} more groups: cranes, lifting, towing, anchor handling, grain …)</summary><div className="group-select" style={{ border: 0, padding: '4px 0 0', margin: 0 }}>{special.map(box)}</div></details>}
+              {old.length > 0 && <details className="more"><summary>Superseded IMO criteria ({old.length})</summary><div className="group-select" style={{ border: 0, padding: '4px 0 0', margin: 0 }}>{old.map(box)}</div></details>}
+            </>;
+          })()}
         </fieldset>
       </section>
 

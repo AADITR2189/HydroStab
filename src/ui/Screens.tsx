@@ -1,5 +1,7 @@
 import type { CriteriaGroupResult, CriterionResult, LoadCase, Results, Vessel } from '../engine/types';
-import { Fragment, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
+import { Icon } from './Icon';
+import { reducedMotion } from './theme';
 import { GzRangeControl, OpLimitsSummary } from './LoadCaseTools';
 import { fileSafe, gzCsv, savePng, saveSvg } from './chartExport';
 import { saveFile, type SaveOutcome } from '../report/save';
@@ -11,13 +13,34 @@ import { GzChart } from './GzChart';
 import { ConfirmDelete } from './CriteriaLibrary';
 
 export function StatusBadge({ pass }: { pass: boolean }) {
-  return <span className={`badge ${pass ? 'pass' : 'fail'}`}>{pass ? '✔ PASS' : '✖ FAIL'}</span>;
+  // key: the badge pops when the result changes
+  return <span key={String(pass)} className={`badge ${pass ? 'pass' : 'fail'}`}><Icon name={pass ? 'check' : 'close'} />{pass ? 'PASS' : 'FAIL'}</span>;
+}
+
+/** A number that glides to its new value (from wherever it is now, so quick changes never jump). */
+function useGlide(target: number, ms = 450): number {
+  const [v, setV] = useState(target);
+  const cur = useRef(target);
+  useEffect(() => {
+    if (reducedMotion() || !Number.isFinite(target)) { cur.current = target; setV(target); return; }
+    const from = cur.current, t0 = performance.now();
+    let raf = 0;
+    const step = (t: number) => {
+      const k = Math.min(1, (t - t0) / ms), e = 1 - Math.pow(1 - k, 3);
+      cur.current = from + (target - from) * e; setV(cur.current);
+      if (k < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [target, ms]);
+  return v;
 }
 
 export function ResultsSidebar({ r, error }: { r: Results | null; error: string | null }) {
+  const gm = useGlide(r?.gmFluid ?? 0);
   if (error) return <aside className="results"><div className="error-box"><strong>Cannot calculate</strong><p>{error}</p></div></aside>;
   if (!r) return null;
-  const rows: [string, string][] = [
+  const draft: [string, string][] = [
     ['Displacement', `${f(r.displacement, 1)} t`],
     ['Deadweight', `${f(r.deadweight, 1)} t`],
     ['Draft AP', `${f(r.draftAP, 3)} m`],
@@ -25,6 +48,8 @@ export function ResultsSidebar({ r, error }: { r: Results | null; error: string 
     ['Draft mean', `${f((r.draftAP + r.draftFP) / 2, 3)} m`],
     ['Trim', `${f(Math.abs(r.trim), 3)} m ${r.trim >= 0 ? 'by stern' : 'by head'}`],
     ['Heel', `${f(Math.abs(r.heel), 2)}° ${r.heel > 0.005 ? 'stbd' : r.heel < -0.005 ? 'port' : ''}`],
+  ];
+  const stab: [string, string][] = [
     ['KM', `${f(r.kmt, 3)} m`],
     ...(typeof r.kml === 'number' ? [['KML', `${f(r.kml, 3)} m`] as [string, string]] : []),
     ['KG', `${f(r.kg, 3)} m`],
@@ -33,27 +58,27 @@ export function ResultsSidebar({ r, error }: { r: Results | null; error: string 
   ];
   return (
     <aside className="results" aria-live="polite">
-      <div className="kpi"><span>GM fluid</span><strong className={r.gmFluid >= 0.15 ? '' : 'fail-text'}>{f(r.gmFluid, 3)} m</strong></div>
-      <dl>{rows.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
-      <div className="overall">
-        <span>Stability criteria</span>
-        <StatusBadge pass={r.overallPass} />
+      <div className="kpi">
+        <span>GM fluid</span>
+        <div className="kpi-row"><strong className={r.gmFluid >= 0.15 ? '' : 'fail-text'}>{f(gm, 3)} m</strong><StatusBadge pass={r.overallPass && (!r.opLimits.some((x) => x.enabled) || r.limitsOk)} /></div>
       </div>
-      <ul className="group-list">
-        {r.groups.map((g) => (
-          <li key={g.id}><span>{g.name.replace('IS Code 2008: ', 'IS 2008 ')}</span><StatusBadge pass={g.passed} /></li>
-        ))}
-        {r.groups.length === 0 && <li className="fail-text">No stability group selected</li>}
-      </ul>
-      {r.opLimits.some((x) => x.enabled) && (
-        <div className="overall">
-          <span>Operational limits</span>
-          {r.limitsOk ? <span className="badge pass">✓ MET</span> : <span className="badge fail">✗ {r.opLimits.filter((x) => x.enabled && !x.passed).length} EXCEEDED</span>}
-        </div>
-      )}
       {r.warnings.length > 0 && (
-        <ul className="warnings">{r.warnings.map((w, i) => <li key={i}>⚠ {w.message}</li>)}</ul>
+        <ul className="warnings">{r.warnings.map((w, i) => <li key={i}><Icon name="alert" /><span>{w.message}</span></li>)}</ul>
       )}
+      <div>
+        <h3>Stability criteria</h3>
+        <ul className="group-list">
+          {r.groups.map((g) => (
+            <li key={g.id}><span>{g.name.replace('IS Code 2008: ', 'IS 2008 ')}</span><StatusBadge pass={g.passed} /></li>
+          ))}
+          {r.groups.length === 0 && <li className="fail-text">No stability group selected</li>}
+          {r.opLimits.some((x) => x.enabled) && (
+            <li><span>Operational limits</span>{r.limitsOk ? <span className="badge pass"><Icon name="check" />MET</span> : <span className="badge fail"><Icon name="close" />{r.opLimits.filter((x) => x.enabled && !x.passed).length} EXCEEDED</span>}</li>
+          )}
+        </ul>
+      </div>
+      <div><h3>Weight and drafts</h3><dl>{draft.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl></div>
+      <div><h3>Stability</h3><dl>{stab.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl></div>
     </aside>
   );
 }
@@ -99,8 +124,8 @@ export function Dashboard({ vessel, status, source, cases, activeId, calc, onOpe
       <section className="panel">
         <div className="panel-head"><h2>Load cases summary ({cases.length})</h2>
           <span className="form-row" style={{ gap: 8 }}>
-            {onAdd && <label className="ghost-file"><span className="file-btn">⬆ Import load case file</span><input type="file" accept=".json,application/json" aria-label="Import load case file" onChange={(e) => { readFile(e.target.files?.[0]); e.target.value = ''; }} /></label>}
-            <button onClick={onCreate}>+ Add load case</button>
+            {onAdd && <label className="ghost-file"><span className="file-btn"><Icon name="upload" />Import load case file</span><input type="file" accept=".json,application/json" aria-label="Import load case file" onChange={(e) => { readFile(e.target.files?.[0]); e.target.value = ''; }} /></label>}
+            <button onClick={onCreate}><Icon name="plus" />Add load case</button>
           </span>
         </div>
         {impMsg && <div className="error-box" role="status">{impMsg}</div>}
@@ -129,7 +154,7 @@ export function Dashboard({ vessel, status, source, cases, activeId, calc, onOpe
             <tbody>
               {rows.map(({ c, r, error }) => (
                 <tr key={c.id} className={c.id === activeId ? 'selected' : ''}>
-                  <td className="wrap"><button className="link" onClick={() => onOpen(c.id)}>{c.name}</button></td>
+                  <td className="lc-name" title={c.name}><button className="link" onClick={() => onOpen(c.id)}>{c.name}</button></td>
                   <td>{c.type}</td>
                   {r ? (
                     <>
@@ -141,7 +166,7 @@ export function Dashboard({ vessel, status, source, cases, activeId, calc, onOpe
                       <td className="num">{f(r.gmFluid, 3)}</td>
                       {groupIds.map((id) => {
                         const g = r.groups.find((x) => x.id === id);
-                        return <td key={id}>{g ? <StatusBadge pass={g.passed} /> : <span className="muted">not checked</span>}</td>;
+                        return g ? <td key={id}><StatusBadge pass={g.passed} /></td> : <td key={id} className="na" title="This group is not selected for this load case">—</td>;
                       })}
                       <td><StatusBadge pass={r.overallPass} /></td>
                     </>
@@ -163,25 +188,30 @@ export function Dashboard({ vessel, status, source, cases, activeId, calc, onOpe
   );
 }
 
+const rangeText = (x?: { from: number; to: number; step: number }) => (x ? `${x.from}° to ${x.to}°, every ${x.step}°` : 'standard (KN angles and every 5°)');
+
 export function Criteria({ r, lc, onChange }: { r: Results; lc: LoadCase; onChange: (lc: LoadCase) => void }) {
   return (
     <div className="stack">
       <section className="panel summary-strip">
         <div><span className="muted">Overall result</span> <StatusBadge pass={r.overallPass} /></div>
         {r.groups.map((g) => (
-          <a key={g.id} href={`#group-${g.id}`} className="chip">
+          <button key={g.id} className="chip ghost" onClick={() => document.getElementById(`group-${g.id}`)?.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'start' })}>
             {g.name} <StatusBadge pass={g.passed} />
-          </a>
+          </button>
         ))}
         {r.groups.length === 0 && <span className="fail-text">No stability group is selected for this load case. Select groups in the Load Case screen.</span>}
+        <details className="range-details" style={{ flexBasis: '100%' }}>
+          <summary>GZ table range for all groups: {rangeText(lc.gzRange)}</summary>
+          <GzRangeControl key={`${lc.id}-${JSON.stringify(lc.gzRange ?? null)}`} lc={lc} onChange={onChange} />
+        </details>
       </section>
-      <OpLimitsSummary r={r} />
-      <section className="panel"><GzRangeControl key={`${lc.id}-${JSON.stringify(lc.gzRange ?? null)}`} lc={lc} onChange={onChange} /></section>
       {r.groups.map((g) => <GroupSection key={g.id} g={g} r={r} lc={lc} onChange={onChange} />)}
+      <OpLimitsSummary r={r} />
       {r.warnings.length > 0 && (
         <section className="panel">
           <div className="panel-head"><h2>Warnings</h2></div>
-          <ul className="warnings">{r.warnings.map((w, i) => <li key={i}>⚠ <strong>{w.code}</strong>: {w.message}</li>)}</ul>
+          <ul className="warnings">{r.warnings.map((w, i) => <li key={i}><Icon name="alert" /><span><strong>{w.code}</strong>: {w.message}</span></li>)}</ul>
         </section>
       )}
     </div>
@@ -221,22 +251,26 @@ function GroupSection({ g, r, lc, onChange }: { g: CriteriaGroupResult; r: Resul
       {!g.error && (
         <>
           <div className="legend">
-            <i className="l-gz" />GZ{r.side < 0 ? ' (heel to port)' : ''}
-            {g.chart === 'GENERAL' && <><i className="l-1" /><i className="l-2" />Areas of this group <i className="l-ref" />Criterion limits <i className="l-gm" />GM tangent</>}
-            {g.chart === 'WEATHER' && <><i className="l-wind" />Wind levers l_w1 / l_w2 <i className="l-a" />Area a <i className="l-b" />Area b <i className="l-ref" />θ0, θ0−θ1, θ2</>}
-            {g.chart === 'FIFI' && <><i className="l-wind" />Heeling arm (monitors + thruster) <i className="l-ref" />Equilibrium</>}
-            {g.chart === 'CRANE' && <><i className="l-wind" />Wind lever during lift <i className="l-2" />Residual area to 20° <i className="l-b" />ARL (to φ2) <i className="l-ref" />φ1, φ2, deck edge</>}
-            <i className="l-flood" />Flooding angle
+            <span><i className="l-gz" />GZ{r.side < 0 ? ' (heel to port)' : ''}</span>
+            {g.chart === 'GENERAL' && <><span><i className="l-1" /><i className="l-2" />Areas checked (alternating colours, one per area)</span><span><i className="l-ref" />Criterion limits</span><span><i className="l-gm" />GM tangent</span></>}
+            {g.chart === 'WEATHER' && <><span><i className="l-wind" />Wind levers l_w1 / l_w2</span><span><i className="l-a" />Area a</span><span><i className="l-b" />Area b</span><span><i className="l-ref" />θ0, θ0−θ1, θ2</span></>}
+            {g.chart === 'FIFI' && <><span><i className="l-wind" />Heeling arm (monitors + thruster)</span><span><i className="l-ref" />Equilibrium</span></>}
+            {g.chart === 'CRANE' && <><span><i className="l-wind" />Wind lever during lift</span><span><i className="l-2" />Residual area to 20°</span><span><i className="l-b" />ARL (to φ2)</span><span><i className="l-ref" />φ1, φ2, deck edge</span></>}
+            <span><i className="l-flood" />Flooding angle</span>
+            <span className="muted small" style={{ marginLeft: 'auto' }}>Point at the curve to read GZ</span>
           </div>
-          <GzRangeControl key={`${lc.id}-${g.id}-${JSON.stringify(lc.gzRanges?.[g.id] ?? lc.gzRange ?? null)}`} lc={lc} onChange={onChange} groupId={g.id} groupName={g.name} />
           <div ref={chartRef}><GzChart r={r} mode={g.chart === 'GENERAL' ? 'general' : g.chart === 'WEATHER' ? 'weather' : g.chart === 'FIFI' ? 'fifi' : 'crane'} criteria={g.criteria} toAngle={(lc.gzRanges?.[g.id] ?? lc.gzRange)?.to} /></div>
           <div className="form-row export-row">
             <span className="muted small">Export:</span>
-            <button className="ghost tiny" onClick={() => run('png')}>⬇ Chart PNG</button>
-            <button className="ghost tiny" onClick={() => run('svg')}>⬇ Chart SVG</button>
-            <button className="ghost tiny" onClick={() => run('csv')}>⬇ GZ table CSV</button>
+            <button className="ghost tiny" onClick={() => run('png')}><Icon name="download" />Chart PNG</button>
+            <button className="ghost tiny" onClick={() => run('svg')}><Icon name="download" />Chart SVG</button>
+            <button className="ghost tiny" onClick={() => run('csv')}><Icon name="download" />GZ table CSV</button>
             {exp && <span className="muted small" role="status">{exp}</span>}
           </div>
+          <details className="range-details">
+            <summary>GZ table range for this group: {rangeText(lc.gzRanges?.[g.id] ?? lc.gzRange)}</summary>
+            <GzRangeControl key={`${lc.id}-${g.id}-${JSON.stringify(lc.gzRanges?.[g.id] ?? lc.gzRange ?? null)}`} lc={lc} onChange={onChange} groupId={g.id} groupName={g.name} />
+          </details>
         </>
       )}
       <div className="table-wrap">

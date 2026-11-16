@@ -1,6 +1,6 @@
 // Criteria Library: create intact stability criteria from building blocks and combine any
 // criteria (built-in or own) into stability groups by clicking them.
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { BUILTIN_CRITERIA, BUILTIN_GROUPS, CRITERION_KINDS } from '../engine/criteriaGroups';
 import type { CriteriaLibrary, CriterionDef, GroupDef, MomentDef, Results } from '../engine/types';
 import { MomentBuilder } from './MomentBuilder';
@@ -29,7 +29,8 @@ export function CriteriaLibraryScreen({ lib, addCriterion, removeCriterion, save
     ...lib.groups.filter((g) => (g.momentIds ?? []).includes(id)).map((g) => `group ${g.name}`),
     ...lib.criteria.filter((c) => c.params?.momentId === id).map((c) => `criterion ${c.name}`),
   ];
-  const startEditCrit = (c: CriterionDef) => { setEditCrit(c); setTimeout(() => document.getElementById('criterion-form')?.scrollIntoView({ behavior: 'smooth' }), 0); };
+  // forms for editing open in place, right under the item being edited
+  const startEditCrit = (c: CriterionDef) => setEditCrit(c);
   const usedIn = (id: string) => [...BUILTIN_GROUPS, ...lib.groups].filter((g) => g.criterionIds.includes(id)).map((g) => g.name);
   const all = [...BUILTIN_CRITERIA, ...lib.criteria];
   const unitOf = (c: CriterionDef) =>
@@ -48,7 +49,7 @@ export function CriteriaLibraryScreen({ lib, addCriterion, removeCriterion, save
           <div className="flow-arrow" aria-hidden="true">→</div>
           <div className="flow-box"><strong>3 · Stability group</strong><span>Click criteria to include them. Moments are optional; connect them only for moment criteria: the group’s combined moment is their <em>sum</em>, arm = Σ Mᵢ / Δ.</span></div>
           <div className="flow-arrow" aria-hidden="true">→</div>
-          <div className="flow-box"><strong>4 · Load case</strong><span>Tick the group. Stability Criteria then shows the group’s GZ diagram, GZ table (GZ, each arm, total, residual) and every moment table.</span></div>
+          <div className="flow-box"><strong>4 · Load case</strong><span>Tick the group. Stability Results then shows the group’s GZ diagram, GZ table (GZ, each arm, total, residual) and every moment table.</span></div>
         </div>
         <p className="muted small">Your own criteria and groups are labelled “User-defined”: they are not statutory unless approved by the Administration or class.</p>
       </section>
@@ -66,7 +67,7 @@ export function CriteriaLibraryScreen({ lib, addCriterion, removeCriterion, save
                     <td className="wrap small">{usedIn(c.id).join(', ') || <span className="muted">not in a group</span>}</td>
                     <td>
                       <span className="confirm">
-                        <button className="ghost" onClick={() => startEditCrit(c)}>Edit</button>
+                        <button className="ghost" aria-expanded={editCrit?.id === c.id} onClick={() => (editCrit?.id === c.id ? setEditCrit(null) : startEditCrit(c))}>{editCrit?.id === c.id ? 'Close' : 'Edit'}</button>
                         <ConfirmDelete label={`Delete ${c.name}`} onConfirm={() => removeCriterion(c.id)} warning={usedIn(c.id).length ? `Used in: ${usedIn(c.id).join(', ')}. It will be removed from these groups.` : undefined} />
                       </span>
                     </td>
@@ -77,7 +78,7 @@ export function CriteriaLibraryScreen({ lib, addCriterion, removeCriterion, save
           </div>
         )}
       </section>
-      <MomentBuilder key={`mom-${editMom?.id ?? 'new'}`} onSave={(m) => { saveMoment(m); setEditMom(null); }} preview={preview} lcName={lcName} editing={editMom} onCancel={() => setEditMom(null)} />
+      {!editMom && <MomentBuilder key="mom-new" onSave={(m) => saveMoment(m)} preview={preview} lcName={lcName} editing={null} onCancel={() => setEditMom(null)} />}
       {moments.length > 0 && (
         <section className="panel">
           <div className="panel-head"><h2>Heeling moments ({moments.length})</h2></div>
@@ -86,24 +87,27 @@ export function CriteriaLibraryScreen({ lib, addCriterion, removeCriterion, save
               <thead><tr><th>Moment</th><th>Formula</th><th>Symbols</th><th /></tr></thead>
               <tbody>
                 {moments.map((m) => (
-                  <tr key={m.id}>
+                  <Fragment key={m.id}>
+                  <tr className={editMom?.id === m.id ? 'selected' : ''}>
                     <td className="wrap">{m.name}<div className="muted small">{m.result === 'ARM' ? 'gives heeling arm' : 'arm = moment ÷ Δ'}</div></td>
                     <td className="mono wrap">{m.formula}</td>
                     <td className="wrap small">{m.vars.map((v) => `${v.name}: ${v.source === 'VALUE' ? `${v.value} ${v.unit ?? ''}` : v.source === 'HEEL' ? 'θ' : v.source.toLowerCase().replace('_', ' ')}`).join(' · ')}</td>
                     <td>
                       <span className="confirm">
-                        <button className="ghost" onClick={() => { setEditMom(m); setTimeout(() => document.getElementById('moment-form')?.scrollIntoView({ behavior: 'smooth' }), 0); }}>Edit</button>
+                        <button className="ghost" aria-expanded={editMom?.id === m.id} onClick={() => setEditMom(editMom?.id === m.id ? null : m)}>{editMom?.id === m.id ? 'Close' : 'Edit'}</button>
                         <ConfirmDelete label={`Delete ${m.name}`} onConfirm={() => removeMoment(m.id)} warning={momUsedIn(m.id).length ? `Used by: ${momUsedIn(m.id).join(', ')}. Those will fail until another moment is chosen.` : undefined} />
                       </span>
                     </td>
                   </tr>
+                  {editMom?.id === m.id && <tr><td colSpan={4} style={{ whiteSpace: 'normal' }}><div className="inline-form"><MomentBuilder key={`mom-${m.id}`} onSave={(x) => { saveMoment(x); setEditMom(null); }} preview={preview} lcName={lcName} editing={editMom} onCancel={() => setEditMom(null)} /></div></td></tr>}
+                  </Fragment>
                 ))}
               </tbody>
             </table>
           </div>
         </section>
       )}
-      <CriterionForm key={`crit-${editCrit?.id ?? 'new'}`} onSave={(c) => { addCriterion(c); setEditCrit(null); }} moments={moments} editing={editCrit} onCancel={() => setEditCrit(null)} />
+      {!editCrit && <CriterionForm key="crit-new" onSave={(c) => addCriterion(c)} moments={moments} editing={null} onCancel={() => setEditCrit(null)} />}
       <section className="panel">
         <div className="panel-head"><h2>Intact stability criteria ({all.length})</h2></div>
         <div className="table-wrap">
@@ -111,7 +115,8 @@ export function CriteriaLibraryScreen({ lib, addCriterion, removeCriterion, save
             <thead><tr><th>Criterion</th><th>Reference</th><th className="num">Requirement</th><th>Source</th><th /></tr></thead>
             <tbody>
               {all.map((c) => (
-                <tr key={c.id}>
+                <Fragment key={c.id}>
+                <tr className={editCrit?.id === c.id ? 'selected' : ''}>
                   <td className="wrap">{c.name}</td>
                   <td className="muted">{c.regulation ?? 'User-defined'}</td>
                   <td className="num">{c.kind === 'SPECIAL' && c.id === 'IS-2.3-AREA' ? 'b ≥ a' : `${c.comparator === '>=' ? '≥' : '≤'} ${c.required} ${unitOf(c)}`}</td>
@@ -125,22 +130,24 @@ export function CriteriaLibraryScreen({ lib, addCriterion, removeCriterion, save
                     )}
                   </td>
                 </tr>
+                {editCrit?.id === c.id && <tr><td colSpan={5} style={{ whiteSpace: 'normal' }}><div className="inline-form"><CriterionForm key={`crit-${c.id}`} onSave={(x) => { addCriterion(x); setEditCrit(null); }} moments={moments} editing={editCrit} onCancel={() => setEditCrit(null)} /></div></td></tr>}
+                </Fragment>
               ))}
             </tbody>
           </table>
         </div>
       </section>
-      <GroupBuilder key={`grp-${editing?.id ?? 'new'}`} all={all} moments={moments} onSave={(g) => { saveGroup(g); setEditing(null); }} editing={editing} onCancel={() => setEditing(null)} />
+      {!editing && <GroupBuilder key="grp-new" all={all} moments={moments} onSave={(g) => saveGroup(g)} editing={null} onCancel={() => setEditing(null)} />}
       <section className="panel">
         <div className="panel-head"><h2>Stability groups</h2></div>
         <div className="group-cards">
           {[...BUILTIN_GROUPS, ...lib.groups].map((g) => (
-            <div key={g.id} className="group-card">
+            <div key={g.id} className="group-card" style={editing?.id === g.id ? { gridColumn: "1 / -1" } : undefined}>
               <div className="panel-head">
                 <div><strong>{g.name}</strong><div className="muted small">{g.regulation}</div></div>
                 {g.builtin ? <span className="chip-static">Built-in</span> : (
                   <span className="confirm">
-                    <button className="ghost" onClick={() => { setEditing(g); window.scrollTo({ top: 0 }); document.getElementById('group-builder')?.scrollIntoView({ behavior: 'smooth' }); }}>Edit</button>
+                    <button className="ghost" aria-expanded={editing?.id === g.id} onClick={() => setEditing(editing?.id === g.id ? null : g)}>{editing?.id === g.id ? 'Close' : 'Edit'}</button>
                     <ConfirmDelete label={`Delete group ${g.name}`} onConfirm={() => removeGroup(g.id)} />
                   </span>
                 )}
@@ -152,6 +159,7 @@ export function CriteriaLibraryScreen({ lib, addCriterion, removeCriterion, save
               <ol className="crit-list">
                 {g.criterionIds.map((id) => <li key={id}>{all.find((c) => c.id === id)?.name ?? <span className="fail-text">missing criterion</span>}</li>)}
               </ol>
+              {editing?.id === g.id && <div className="inline-form"><GroupBuilder key={`grp-${g.id}`} all={all} moments={moments} onSave={(x) => { saveGroup(x); setEditing(null); }} editing={editing} onCancel={() => setEditing(null)} /></div>}
             </div>
           ))}
         </div>

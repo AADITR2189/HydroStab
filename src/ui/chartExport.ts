@@ -1,11 +1,12 @@
 // Export a chart (SVG on screen) as SVG or PNG with its colours inlined, and a GZ table as CSV.
 import type { CriteriaGroupResult } from '../engine/types';
 import { saveFile, type SaveOutcome } from '../report/save';
+import { surfaceColour } from './theme';
 
 const PROPS = ['fill', 'fill-opacity', 'stroke', 'stroke-width', 'stroke-dasharray', 'stroke-opacity', 'opacity', 'font-size', 'font-family', 'font-weight', 'text-anchor', 'dominant-baseline'];
 
 /** Copy of the SVG with every computed style written onto the elements, plus a background. */
-export function standaloneSvg(svg: SVGSVGElement, background = '#1F2327'): string {
+export function standaloneSvg(svg: SVGSVGElement, background = surfaceColour()): string {
   const clone = svg.cloneNode(true) as SVGSVGElement;
   const src = [svg, ...svg.querySelectorAll('*')];
   const dst = [clone, ...clone.querySelectorAll('*')];

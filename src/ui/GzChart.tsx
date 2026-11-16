@@ -1,3 +1,4 @@
+import { useState } from 'react';
 // Engineering-style stability diagrams (pure SVG, printable). The GZ curve is drawn towards
 // the side of heel (as calculated by the engine).
 //   plain   : GZ curve with GM tangent, flooding angle, GZmax
@@ -15,6 +16,7 @@ const AREA_CLASSES = ['area-1', 'area-2', 'area-3', 'area-4'];
 
 export function GzChart({ r, mode = 'plain', criteria = [], toAngle }: { r: Results; mode?: Mode; criteria?: CriterionResult[]; /** right end of the heel axis (the group's range) */ toAngle?: number }) {
   const W = 800, H = 380, m = { l: 56, r: 24, t: 26, b: 44 };
+  const [hover, setHover] = useState<number | null>(null);
   const full = r.gzCurve;
   const end = full[full.length - 1]?.heel ?? 90;
   const xMax = toAngle !== undefined && toAngle > 0 ? Math.min(end, toAngle) : end;
@@ -115,7 +117,15 @@ export function GzChart({ r, mode = 'plain', criteria = [], toAngle }: { r: Resu
   const critOf = (code: string) => r.criteria.find((c) => c.code === code);
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="chart" role="img" aria-label={`GZ curve, ${mode} view`}>
+    <svg viewBox={`0 0 ${W} ${H}`} className="chart" role="img" aria-label={`GZ curve, ${mode} view`}
+      onPointerMove={(e) => {
+        const svg = e.currentTarget, ctm = svg.getScreenCTM();
+        if (!ctm) return;
+        const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(ctm.inverse());
+        const heel = xMin + ((pt.x - m.l) / (W - m.l - m.r)) * (xMax - xMin);
+        setHover(heel >= xMin && heel <= xMax ? Math.round(heel * 2) / 2 : null);
+      }}
+      onPointerLeave={() => setHover(null)}>
       {yTicks.map((y) => (
         <g key={`y${y}`}>
           <line x1={m.l} x2={W - m.r} y1={sy(y)} y2={sy(y)} className={Math.abs(y) < 1e-9 ? 'axis' : 'grid'} />
@@ -189,7 +199,7 @@ export function GzChart({ r, mode = 'plain', criteria = [], toAngle }: { r: Resu
         </>
       )}
       {r.floodAngle < xMax && vline(r.floodAngle, 'flood', `θf ${r.floodAngle.toFixed(1)}°`, -1)}
-      <path d={line(curve)} className="gz" />
+      <path d={line(curve)} className="gz" pathLength={1} />
       {mode !== 'weather' && (
         <>
           <circle cx={sx(r.gzMaxAngle)} cy={sy(r.gzMax)} r={4} className="gzmax" />
@@ -198,6 +208,18 @@ export function GzChart({ r, mode = 'plain', criteria = [], toAngle }: { r: Resu
           </text>
         </>
       )}
+      {hover !== null && (() => {
+        const g = gzAt(hover), x = sx(hover), y = sy(g), right = x > W - 190;
+        return (
+          <g pointerEvents="none">
+            <line x1={x} x2={x} y1={m.t} y2={H - m.b} className="hover-line" />
+            <circle cx={x} cy={y} r={4.5} className="hover-dot" />
+            <rect x={right ? x - 132 : x + 10} y={Math.max(m.t, Math.min(y - 46, H - m.b - 44))} width={122} height={40} rx={6} className="hover-box" />
+            <text x={right ? x - 122 : x + 20} y={Math.max(m.t, Math.min(y - 46, H - m.b - 44)) + 17} className="hover-text">{`GZ ${g.toFixed(3)} m`}</text>
+            <text x={right ? x - 122 : x + 20} y={Math.max(m.t, Math.min(y - 46, H - m.b - 44)) + 32} className="hover-sub">{`at ${hover.toFixed(1)}° heel`}</text>
+          </g>
+        );
+      })()}
     </svg>
   );
 }

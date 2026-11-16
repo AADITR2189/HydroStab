@@ -86,7 +86,7 @@ function SourceRecord({ pr, builtIn, status, source }: { pr?: Provenance; builtI
     return (
       <section className="panel">
         <div className="panel-head"><h2>Source</h2></div>
-        <p className={builtIn ? 'warn-text' : 'warn-text'}>{builtIn ? `${status === 'DEMO' ? 'Demo data' : `Extracted from the booklet, not yet verified`}: ${source}` : 'No import record: this data set came with the copied vessel and has not been imported or verified here. Import it with Data Import, or check it and save it in the editor.'}</p>
+        <p className={builtIn ? 'warn-text' : 'warn-text'}>{builtIn ? `${status === 'DEMO' ? 'Demo data' : `Extracted from the booklet, not yet verified`}: ${source}` : 'No import record: this data set came with the copied vessel and has not been imported or verified here. Import it with Import Data, or check it and save it in the editor.'}</p>
       </section>
     );
   }
@@ -155,7 +155,7 @@ function TableDataset({ ref_, v, mine, save, editing, setEditing, onDeleted }: {
       if (!res.ok) { setMsg({ ok: false, text: `Not saved: ${res.text}.` }); return; }
       const nv = plain.reduce((s, r) => s + r.filter((x) => !(typeof x === 'number' && Number.isNaN(x))).length, 0);
       save(withEdit(mine, ref.key, res.vessel, by.trim(), reason.trim(), changes, () => ({
-        dataset: ref.key, method: 'TYPED', fileName: 'Checked and edited in Imported Data', fileSha256: '', location: 'Imported Data editor',
+        dataset: ref.key, method: 'TYPED', fileName: 'Checked and edited in Data Tables', fileSha256: '', location: 'Data Tables editor',
         rows: plain.length, values: nv, editedCells: changes.length, checks: { errors: 0, warnings: checks.filter((c) => c.level === 'warn').length },
         storedCheck: res.text, verifiedBy: by.trim(), verifiedAt: new Date().toISOString(),
       })));
@@ -186,7 +186,7 @@ function TableDataset({ ref_, v, mine, save, editing, setEditing, onDeleted }: {
       </div>
       {msg && <div className={msg.ok ? 'notice ok-notice' : 'error-box'} role="status" style={{ marginBottom: 8 }}>{msg.text}</div>}
       <ul className="checks">{checks.map((c, i) => <li key={i} className={c.level}><span className="mark">{c.level === 'ok' ? '✓' : c.level === 'warn' ? '!' : '✗'}</span><span><b>{c.title}</b>{c.detail && <span className="muted"> · {c.detail}</span>}</span></li>)}</ul>
-      {!before.length && !editing && <p className="muted">No rows. {mine ? 'Use Edit to type them, or Data Import.' : ''}</p>}
+      {!before.length && !editing && <p className="muted">No rows. {mine ? 'Use Edit to type them, or Import Data.' : ''}</p>}
       <div className="table-wrap tall">
         <table className="grid ds-table">
           <thead><tr><th className="num">#</th>{cols.map((c) => <th key={c.key} className={c.type === 'num' ? 'num' : ''}>{c.label}{c.unit && <div className="muted small">{c.unit}</div>}</th>)}{editing && <th />}</tr></thead>
