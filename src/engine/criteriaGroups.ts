@@ -20,6 +20,12 @@ export const BUILTIN_CRITERIA: CriterionDef[] = [
   // IS Code 2008 Part A 2.3
   { id: 'IS-2.3-HEEL', name: 'Steady wind heel θ₀ ≤ 16° or 0.8 × deck edge angle', kind: 'SPECIAL', comparator: '<=', required: 16, regulation: 'IS Code 2008 A 2.3.1' },
   { id: 'IS-2.3-AREA', name: 'Weather criterion: area b ≥ area a', kind: 'SPECIAL', comparator: '>=', required: 0, regulation: 'IS Code 2008 A 2.3.1' },
+  // IS Code 2008 Part A 3.3.2: cargo ships carrying timber deck cargoes, alternative criteria
+  { id: 'TIMBER-1', name: 'Area under GZ curve 0° to 40° or θf ≥ 0.08 m·rad (timber deck cargo)', kind: 'AREA', comparator: '>=', required: 0.08, params: { from: 0, to: 40, capAtFlood: true }, regulation: 'IS Code 2008 A 3.3.2.1' },
+  { id: 'TIMBER-2', name: 'Maximum righting lever GZ ≥ 0.25 m (timber deck cargo)', kind: 'GZ_MAX_FROM', comparator: '>=', required: 0.25, params: { from: 0 }, regulation: 'IS Code 2008 A 3.3.2.2' },
+  { id: 'TIMBER-3', name: 'GM₀ ≥ 0.10 m at all times, with water absorbed by the deck cargo and ice (timber deck cargo)', kind: 'GM', comparator: '>=', required: 0.1, regulation: 'IS Code 2008 A 3.3.2.3' },
+  { id: 'TIMBER-2.3-HEEL', name: 'Steady wind heel θ₀ ≤ 16° (80 % of deck-edge angle not applied)', kind: 'SPECIAL', comparator: '<=', required: 16, regulation: 'IS Code 2008 A 3.3.2.4' },
+  { id: 'TIMBER-2.3-AREA', name: 'Weather criterion: area b ≥ area a (timber deck cargo)', kind: 'SPECIAL', comparator: '>=', required: 0, regulation: 'IS Code 2008 A 3.3.2.4 / 2.3' },
   // BV fire-fighting ship
   { id: 'FIFI-1', name: 'Heel at equilibrium under water-jet reaction and thruster < 5°', kind: 'SPECIAL', comparator: '<=', required: 5, regulation: 'BV Fire-fighting ships' },
   // IS Code 2008 Part B 2.9.4 lifting operations
@@ -141,6 +147,11 @@ export const BUILTIN_GROUPS: GroupDef[] = [
     id: 'GRAIN', name: 'Grain in Bulk (International Grain Code)', regulation: 'IS Code 2008 A 3.4 / International Grain Code A 7',
     description: 'Grain shift heeling arm λ0 = Σ(VHM / SF) / Δ, λ40 = 0.8·λ0. Enter the holds in the load case.',
     chart: 'GENERAL', criterionIds: ['GRAIN-1', 'GRAIN-2', 'GRAIN-3'],
+  },
+  {
+    id: 'TIMBER', name: 'Timber Deck Cargo (IS Code 2008 A 3.3.2)', regulation: 'IMO IS Code 2008, Part A, 3.3.2 (alternative criteria)',
+    description: 'Alternative criteria for cargo ships with timber deck cargo extending between superstructures over the full beam, when accepted by the Administration (otherwise 2.2 and 2.3 apply). Include in the condition the water absorbed by the deck cargo (as a weight item) and ice where expected; give the deck cargo its wind area (weight item wind area).',
+    chart: 'GENERAL', criterionIds: ['TIMBER-1', 'TIMBER-2', 'TIMBER-3', 'TIMBER-2.3-HEEL', 'TIMBER-2.3-AREA'],
   },
   {
     id: 'PONTOON', name: 'Pontoons (IS Code 2008 B 2.2)', regulation: 'IMO IS Code 2008, Part B, 2.2',

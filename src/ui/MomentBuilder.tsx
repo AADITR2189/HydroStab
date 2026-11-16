@@ -43,6 +43,26 @@ export function MomentBuilder({ onSave, preview, lcName, editing, onCancel }: {
   const [vars, setVars] = useState<Record<string, MomentVar>>(() => Object.fromEntries((editing?.vars ?? []).map((v) => [v.name, v])));
   const [open, setOpen] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  // a moment can also be entered as values at heel angles (e.g. from a booklet or a model test)
+  const [input, setInput] = useState<'FORMULA' | 'TABLE'>(editing?.input ?? 'FORMULA');
+  const [rows, setRows] = useState<{ heel: string; value: string }[]>(() => (editing?.table?.length ? editing.table.map((p) => ({ heel: String(p.heel), value: String(p.value) })) : [0, 10, 20, 30, 40].map((h) => ({ heel: String(h), value: '' }))));
+  const [paste, setPaste] = useState('');
+  const tablePts = useMemo(() => {
+    const pts = rows.filter((r) => r.heel.trim() !== '' || r.value.trim() !== '').map((r) => ({ heel: Number(r.heel.replace(',', '.')), value: Number(r.value.replace(',', '.')) }));
+    const bad = pts.findIndex((p) => !Number.isFinite(p.heel) || !Number.isFinite(p.value));
+    if (bad >= 0) return { error: `Row ${bad + 1}: enter a number for the heel angle and the value.` };
+    const sorted = [...pts].sort((a, b) => a.heel - b.heel);
+    if (sorted.length < 2) return { error: 'Enter at least two heel angles.' };
+    if (sorted.some((p, i) => i > 0 && p.heel === sorted[i - 1].heel)) return { error: 'Each heel angle may appear only once.' };
+    if (sorted.some((p) => p.heel < -90 || p.heel > 90)) return { error: 'Heel angles must be between −90° and 90°.' };
+    return { pts: sorted };
+  }, [rows]);
+  /** two columns pasted from Excel or the booklet: heel, value (tab, ; or spaces) */
+  const readPaste = () => {
+    const out = paste.split(/\r?\n/).map((l) => l.trim()).filter(Boolean).map((l) => l.split(/[\t;]+|\s{1,}/).filter(Boolean)).filter((c) => c.length >= 2 && Number.isFinite(Number(c[0].replace(',', '.'))))
+      .map((c) => ({ heel: c[0].replace(',', '.'), value: c[1].replace(',', '.') }));
+    if (out.length) { setRows(out); setPaste(''); setMsg(null); } else setMsg({ ok: false, text: 'No rows with two numbers found in the pasted text.' });
+  };
 
   const parsed = useMemo(() => {
     if (!formula.trim()) return { vars: [] as string[], error: null as string | null, f: null as ReturnType<typeof parseFormula> | null };
@@ -78,6 +98,16 @@ export function MomentBuilder({ onSave, preview, lcName, editing, onCancel }: {
 
   const save = () => {
     if (!name.trim()) return setMsg({ ok: false, text: 'Give the moment a name.' });
+    if (input === 'TABLE') {
+      if ('error' in tablePts) return setMsg({ ok: false, text: tablePts.error! });
+      const pts = tablePts.pts!;
+      const desc = `table of ${result === 'ARM' ? 'heeling arm (m)' : 'heeling moment (t·m)'}, ${pts.length} angles ${pts[0].heel}°–${pts[pts.length - 1].heel}°`;
+      onSave({ id: editing?.id ?? `M-${newId()}`, name: name.trim(), formula: desc, result, vars: [], input: 'TABLE', table: pts });
+      if (editing) { setMsg({ ok: true, text: `Moment “${name.trim()}” updated. Groups and criteria using it are recalculated.` }); return; }
+      setMsg({ ok: true, text: `Moment “${name.trim()}” saved. Use it in a criterion: “Heel at equilibrium under a heeling moment” or “Residual area”.` });
+      setName(''); setRows([0, 10, 20, 30, 40].map((h) => ({ heel: String(h), value: '' })));
+      return;
+    }
     if (!parsed.f) return setMsg({ ok: false, text: parsed.error ?? 'Enter a formula.' });
     const list = parsed.vars.map(linkOf);
     const missing = list.find((v) => v.source === 'VALUE' && !Number.isFinite(v.value));
@@ -93,13 +123,53 @@ export function MomentBuilder({ onSave, preview, lcName, editing, onCancel }: {
       <div className="panel-head" id="moment-form"><h2>{editing ? `Edit heeling moment: ${editing.name}` : 'Create heeling moment'}</h2></div>
       <div className="form-row">
         <label>Moment name<input id="mom-name" className="wide" value={name} placeholder="e.g. Towline pull" onChange={(e) => setName(e.target.value)} /></label>
-        <label>Formula gives
+        <label>{input === 'TABLE' ? 'Values are' : 'Formula gives'}
           <select id="mom-result" value={result} onChange={(e) => setResult(e.target.value as 'MOMENT' | 'ARM')}>
             <option value="MOMENT">Moment (t·m): heeling arm = moment ÷ displacement</option>
             <option value="ARM">Heeling arm (m) directly</option>
           </select>
         </label>
+        <label>Enter as
+          <span className="seg" role="group" aria-label="Enter the moment as">
+            <button type="button" className={input === 'FORMULA' ? 'on' : ''} aria-pressed={input === 'FORMULA'} onClick={() => setInput('FORMULA')}>Formula</button>
+            <button type="button" className={input === 'TABLE' ? 'on' : ''} aria-pressed={input === 'TABLE'} onClick={() => setInput('TABLE')}>Table of values</button>
+          </span>
+        </label>
       </div>
+      {input === 'TABLE' && (
+        <div className="calc-box" style={{ gridTemplateColumns: 'minmax(260px, 1fr) minmax(260px, 1fr)' }}>
+          <div>
+            <h3 className="small-h">{result === 'ARM' ? 'Heeling arm' : 'Heeling moment'} at each heel angle</h3>
+            <table className="grid">
+              <thead><tr><th className="num">Heel θ °</th><th className="num">{result === 'ARM' ? 'Arm m' : 'Moment t·m'}</th><th /></tr></thead>
+              <tbody>
+                {rows.map((r, i) => (
+                  <tr key={i}>
+                    <td className="num"><input type="number" step="any" value={r.heel} aria-label={`Heel angle row ${i + 1}`} onChange={(e) => setRows(rows.map((x, k) => (k === i ? { ...x, heel: e.target.value } : x)))} /></td>
+                    <td className="num"><input type="number" step="any" value={r.value} aria-label={`Value row ${i + 1}`} onChange={(e) => setRows(rows.map((x, k) => (k === i ? { ...x, value: e.target.value } : x)))} /></td>
+                    <td><button type="button" className="ghost tiny" aria-label={`Delete row ${i + 1}`} onClick={() => setRows(rows.filter((_, k) => k !== i))}>✕</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <button type="button" className="ghost tiny" onClick={() => setRows([...rows, { heel: rows.length ? String(Number(rows[rows.length - 1].heel || 0) + 10) : '0', value: '' }])}>+ Add angle</button>
+            <p className="muted small">Linear between the angles; outside the table the first / last value is used. The order of rows does not matter.</p>
+          </div>
+          <div>
+            <h3 className="small-h">Paste two columns (from Excel or the booklet)</h3>
+            <textarea rows={7} value={paste} onChange={(e) => setPaste(e.target.value)} placeholder={'0\t0.120\n10\t0.118\n20\t0.113\n…'} aria-label="Paste heel angles and values" />
+            <button type="button" className="ghost tiny" disabled={!paste.trim()} onClick={readPaste}>Use pasted values</button>
+            {'error' in tablePts ? <p className="fail-text small">{tablePts.error}</p> : preview && (
+              <table className="grid" style={{ marginTop: 8 }}>
+                <thead><tr><th className="num">Heel θ °</th><th className="num">Heeling arm m</th></tr></thead>
+                <tbody>{tablePts.pts!.map((p) => <tr key={p.heel}><td className="num">{p.heel}</td><td className="num">{f(result === 'ARM' ? p.value : p.value / preview.displacement, 4)}</td></tr>)}</tbody>
+              </table>
+            )}
+            {preview && result === 'MOMENT' && !('error' in tablePts) && <p className="muted small">Arm = moment ÷ Δ of “{lcName}” ({f(preview.displacement, 1)} t).</p>}
+          </div>
+        </div>
+      )}
+      {input === 'FORMULA' && <>
       <label className="formula-field">Formula
         <input id="mom-formula" className="mono" value={formula} placeholder="e.g. (n*R*(h - T/2) + S*(T/2 - e))*cos(theta)" onChange={(e) => setFormula(e.target.value)} spellCheck={false} />
       </label>
@@ -167,6 +237,7 @@ export function MomentBuilder({ onSave, preview, lcName, editing, onCancel }: {
           </div>
         </>
       )}
+      </>}
       <div className="form-actions confirm">
         <button type="button" onClick={save}>{editing ? 'Save changes' : 'Save moment'}</button>
         {editing && <button type="button" className="ghost" onClick={onCancel}>Cancel editing</button>}

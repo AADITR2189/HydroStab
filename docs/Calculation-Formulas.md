@@ -230,12 +230,20 @@ The GZ tables use the range and step you choose, for the load case or for each c
   - at least 0.055 m·rad if θ_max ≥ 30°.
 - The other limits are as in Part A, except that the angle of GZ max must be ≥ 15°.
 
+**Timber deck cargo (IS 2008 A 3.3.2, alternative criteria when the Administration accepts them; otherwise 2.2 and 2.3 apply)**
+
+- Area under GZ from 0° to 40° (or θ_f if less) ≥ 0.08 m·rad.
+- GZ max ≥ 0.25 m.
+- GM₀ (fluid) ≥ 0.10 m at all times. Water absorbed by the deck cargo and ice must be in the condition (as weight items and the ice allowance, §8a).
+- Weather criterion as in §8, with the steady-wind heel limit **16°** (the 80 % of the deck-edge angle is not applied, 3.3.2.4). The deck cargo's wind area is given as the wind area of its weight item.
+
 ## 7 Heeling moments you define (`formula.ts`, `stability.ts`)
 
 - Each moment is a formula. Its variables are linked to values you enter, to values of the load case (Δ, drafts, KG, KG_f, KB, TCG, LCG, GM, KM, trim, static heel), or to the heel angle θ.
 - Heeling arm = M / Δ. If the formula already gives an arm, it is used directly.
 - A group with several moments uses their sum: arm_total(θ) = Σ arm_i(θ).
 - A group can also have no moment at all. It then holds only criteria that need no moment (areas, GZ, GM, and so on).
+- **Moment or arm entered as a table** (e.g. from a booklet or model test): values at heel angles; linear between the angles; outside the table the first / last value is used. A moment table gives the arm = M / Δ at each angle.
 
 ## 8 Weather criterion (IS Code 2008 A 2.3; also IMO A.562)
 
@@ -267,6 +275,18 @@ The GZ tables use the range and step you choose, for the load case or for each c
 - Area b = ∫(GZ − l_w2) from that crossing to θ₂ = min(θ_f, 50°, the second crossing).
 - The criteria are: b ≥ a, and θ₀ ≤ min(16°, 0.8 × deck edge angle).
 - Warnings are shown when B/d ≥ 3.5, when KG/d − 1 is outside −0.3…0.5, or when T > 20 s.
+
+## 8a Ice accretion (IS Code 2008 B 6.3.1; for offshore supply vessels 6.4 refers to it)
+
+Ticked per load case:
+
+- Deck ice: W_deck = 30 kg/m² × exposed weather deck and gangway area × factor, at the entered height and position.
+- Side ice: W_side = 2 × 7.5 kg/m² × lateral area above the waterline × factor (both sides, so no list).
+  - The lateral area A and its centroid height come from the windage table at the midship draft of the condition with the deck ice (one step; the side ice itself changes the draft only slightly).
+  - Centre: centroid height of A, the entered position from AP, on the centreline.
+- The factor (0.5–2) covers areas with lighter or heavier icing (6.3.2.6); the rates can be changed.
+- Wind (weather, crane, pontoon, MODU checks): A' = 1.05 × A and A'·Z' = 1.10 × A·Z (rails, booms and rigging, 6.3.1.3).
+- The ice appears as its own group "Ice accretion" in the weight summary.
 
 ## 9 Special operations
 

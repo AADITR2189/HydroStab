@@ -279,6 +279,24 @@ export interface OperationData {
   escort?: { hl: number };
   /** Height of the deck at the stern above base for the stern freeboard check (m); default: moulded depth. */
   sternDeckZ?: number;
+  /** IS Code 2008 B 6.3.1 (also for OSVs, 6.4) icing allowance. */
+  ice?: IceInput;
+}
+
+export interface IceInput {
+  enabled: boolean;
+  /** exposed weather decks and gangways (m²), with the centre of that area: height above base and position from AP (m) */
+  deckArea: number;
+  deckZ: number;
+  deckX: number;
+  /** kg/m², default 30 (6.3.1.1) */
+  deckRate?: number;
+  /** kg/m² on the projected lateral area of each side above the waterline, default 7.5 (6.3.1.2) */
+  sideRate?: number;
+  /** position of the lateral-area centre from AP (m), default midship */
+  sideX?: number;
+  /** icing area factor: 0.5 to 2 (6.3.2.6), default 1 */
+  factor?: number;
 }
 
 export interface CriterionDef {
@@ -326,6 +344,10 @@ export interface MomentDef {
   result: 'MOMENT' | 'ARM';
   vars: MomentVar[];
   description?: string;
+  /** TABLE: the moment (or arm) is given as values at heel angles instead of a formula; formula then holds a short description */
+  input?: 'FORMULA' | 'TABLE';
+  /** TABLE input: value (t·m or m, see result) at each heel angle (°), heel increasing */
+  table?: { heel: number; value: number }[];
 }
 
 export interface CriteriaLibrary {

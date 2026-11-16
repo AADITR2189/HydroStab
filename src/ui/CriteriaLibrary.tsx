@@ -119,7 +119,7 @@ export function CriteriaLibraryScreen({ lib, addCriterion, removeCriterion, save
                 <tr className={editCrit?.id === c.id ? 'selected' : ''}>
                   <td className="wrap">{c.name}</td>
                   <td className="muted">{c.regulation ?? 'User-defined'}</td>
-                  <td className="num">{c.kind === 'SPECIAL' && c.id === 'IS-2.3-AREA' ? 'b ≥ a' : `${c.comparator === '>=' ? '≥' : '≤'} ${c.required} ${unitOf(c)}`}</td>
+                  <td className="num">{c.kind === 'SPECIAL' && /(2\.3|A562)-AREA$/.test(c.id) ? 'b ≥ a' : `${c.comparator === '>=' ? '≥' : '≤'} ${c.required} ${unitOf(c)}`}</td>
                   <td>{c.builtin ? <span className="chip-static">Built-in</span> : <span className="chip-static own">User-defined</span>}</td>
                   <td>
                     {!c.builtin && (

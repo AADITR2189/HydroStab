@@ -328,19 +328,38 @@ function OperationPanel({ lc, vessel, set }: { lc: LoadCase; vessel: Vessel; set
   const modu = ops.modu ?? { unitType: 'SURFACE' as const, windSpeed: 36, coefficient: 1.0 };
   const lift = ops.lifting ?? { exposed: false, hs: 0 };
   const show = {
-    wx: has('IS2008_WEATHER', 'IMO_A749', 'IMO_A562'), pont: has('PONTOON'), craneWind: has('CRANE_OPS', 'LIFT_293'), pax: has('IS2008_PAX'), grain: has('GRAIN'), modu: has('MODU'),
+    wx: has('IS2008_WEATHER', 'IMO_A749', 'IMO_A562', 'TIMBER'), pont: has('PONTOON'), craneWind: has('CRANE_OPS', 'LIFT_293'), pax: has('IS2008_PAX'), grain: has('GRAIN'), modu: has('MODU'),
     lift: has('LIFT_293', 'LIFT_295', 'LIFT_297', 'LIFT_297_LOSS'), liftAlt: has('LIFT_297', 'LIFT_297_LOSS'), hook: has('LIFT_295', 'LIFT_297_LOSS'),
     ah: has('ANCHOR_HANDLING'), tow: has('TOWING'), esc: has('ESCORT'),
+    ice: true, // icing allowance can be added to any load case
   };
   const ah = ops.anchor ?? { fp: 0, fd: 0, bp: 0, alpha: 5, h: 0, y0: 0, x: 0, xStern: 0, zStern: vessel.depth, lLL: vessel.lbp };
   const tow = ops.towing ?? { bp: 0, propulsion: 'CONVENTIONAL' as const, azimuthMin: 0.7 as const, l: 0, zTow: 0, zProp: 0, r: 0, ls: 0, ap: 0, lLL: vessel.lbp };
   const setAh = (p: Partial<typeof ah>) => setOps({ anchor: { ...ah, ...p } });
   const setTow = (p: Partial<typeof tow>) => setOps({ towing: { ...tow, ...p } });
+  const ice = ops.ice ?? { enabled: false, deckArea: 0, deckZ: vessel.depth, deckX: vessel.lbp / 2 };
+  const setIce = (p: Partial<typeof ice>) => setOps({ ice: { ...ice, ...p } });
   if (!Object.values(show).some(Boolean)) return null;
   return (
     <section className="panel">
       <div className="panel-head"><h2>Operation data</h2><span className="muted small">Inputs for the selected stability groups</span></div>
       <div className="ops">
+        <fieldset className="ops-box wide">
+          <legend>Ice accretion (IS Code 2008 B 6.3.1)</legend>
+          <label className="check"><input type="checkbox" checked={ice.enabled} onChange={(e) => setIce({ enabled: e.target.checked })} /> Include icing allowance in this load case (areas where ice accretion is likely, e.g. the arrival condition)</label>
+          {ice.enabled && (
+            <div className="ops-grid">
+              <label>Exposed weather decks and gangways (m²)<NumInput value={ice.deckArea} onCommit={(v) => setIce({ deckArea: v })} /></label>
+              <label>Deck ice: height above base (m)<NumInput value={ice.deckZ} onCommit={(v) => setIce({ deckZ: v })} /></label>
+              <label>Deck ice: centre from AP (m)<NumInput value={ice.deckX} onCommit={(v) => setIce({ deckX: v })} /></label>
+              <label>Deck rate (kg/m²)<NumInput value={ice.deckRate ?? 30} onCommit={(v) => setIce({ deckRate: v })} /></label>
+              <label>Side rate, each side (kg/m²)<NumInput value={ice.sideRate ?? 7.5} onCommit={(v) => setIce({ sideRate: v })} /></label>
+              <label>Side ice: centre from AP (m)<NumInput value={ice.sideX ?? vessel.lbp / 2} onCommit={(v) => setIce({ sideX: v })} /></label>
+              <label>Icing area factor (0.5 – 2)<NumInput value={ice.factor ?? 1} step={0.1} onCommit={(v) => setIce({ factor: Math.min(2, Math.max(0.5, v)) })} /></label>
+            </div>
+          )}
+          <p className="muted small">30 kg/m² on exposed decks and 7.5 kg/m² on the lateral area of each side above the waterline (from the windage table at the condition's draft, centre at the area's centroid height); wind area +5 % and its moment +10 % for rails, booms and rigging (6.3.1.3). The factor allows ½ to 2 × the allowance for areas with different icing (6.3.2.6). Offshore supply vessels: 6.4 refers to the same allowance. Shown as "Ice accretion" in the weight summary.</p>
+        </fieldset>
         {(show.wx || show.pont || show.craneWind) && (
           <fieldset className="ops-box">
             <legend>Wind</legend>

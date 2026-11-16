@@ -43,8 +43,9 @@ It runs as an installable **web app (PWA)** on PC and laptop: it opens in the br
 - **Reports:** PDF and Excel (summary, particulars, condition, tanks, criteria, one page per stability group with GZ curve and tables, trace); report ID = checksum of inputs and results. Charts as PNG / SVG, tables as CSV, one load case as a file.
 
 ### Criteria
-- IMO IS Code 2008 general criteria and weather criterion; OSV; passenger ships; grain; pontoons; MODU; BV fire-fighting; crane and lifting (IS Code B 2.9); anchor handling, towing and escort (MSC.415(97)); superseded IMO A.167 / A.562 / A.749.
-- **Criteria Setup:** your own criteria, heeling moments from formulas linked to the load case, and your own stability groups.
+- IMO IS Code 2008 general criteria and weather criterion; OSV; passenger ships; grain; pontoons; MODU; BV fire-fighting; crane and lifting (IS Code B 2.9); anchor handling, towing and escort (MSC.415(97)); timber deck cargo (A 3.3.2); superseded IMO A.167 / A.562 / A.749.
+- **Ice accretion** (IS Code B 6.3.1, also for OSVs) as a tick per load case: deck and side ice, more wind area.
+- **Criteria Setup:** your own criteria, heeling moments from formulas linked to the load case or entered as a table against heel, and your own stability groups.
 
 ### Working with the app
 - Light and dark theme (follows the computer, or chosen), keyboard shortcuts (press **?**), **undo / redo** of every change (kept after closing the app), Back / Forward between screens.
@@ -55,7 +56,8 @@ It runs as an installable **web app (PWA)** on PC and laptop: it opens in the br
 |---|---|
 | MODU column-stabilised alternative, 46 CFR, DDS 079-1 extras, class notations | the rule texts |
 | More vessels | vessel data: see the [Vessel Data Checklist](docs/DATA-CHECKLIST.md) |
-| Ice accretion, timber deck cargo, heeling arm as a table, longitudinal strength, damage stability | later phases: see the [Roadmap](docs/05-Development-Roadmap.md) |
+| Longitudinal strength | Bonjean / sectional areas or offsets, lightweight distribution, tank extents, frame table, permissible SF / BM |
+| Damage stability, fleet overview, desktop app | later phases: see the [Roadmap](docs/05-Development-Roadmap.md) |
 
 ---
 

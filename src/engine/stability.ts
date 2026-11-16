@@ -40,6 +40,26 @@ export function calculate(vessel: Vessel, lc: LoadCase, library: CriteriaLibrary
     if (lc.ops.anchor.fp > lc.ops.anchor.fd) warnings.push({ code: 'FP_ABOVE_FD', message: `Permissible tension Fp ${lc.ops.anchor.fp} t is greater than the design maximum tension Fd ${lc.ops.anchor.fd} t (not allowed by 2.7.2).` });
     items.push({ group: 'Variable weights', w: ahGeo.fv, x: lc.ops.anchor.xStern, y: 0, z: lc.ops.anchor.zStern });
   }
+  // IS Code 2008 B 6.3.1 icing allowance: deck ice (area × rate) and ice on the lateral area of both sides
+  // (rate × lateral area above the waterline, at the draft of the condition without that side ice).
+  const ice = lc.ops?.ice?.enabled ? lc.ops.ice : null;
+  if (ice) {
+    const k = ice.factor ?? 1;
+    const deckW = (Math.max(0, ice.deckArea) * (ice.deckRate ?? 30) * k) / 1000;
+    if (deckW > 0) items.push({ group: 'Ice accretion', w: deckW, x: ice.deckX, y: 0, z: ice.deckZ });
+    if (vessel.windage.length >= 2) {
+      const d0 = kahanSum(items.map((i) => i.w));
+      const h0 = solveHydrostatics(vessel, d0, kahanSum(items.map((i) => i.w * i.x)) / d0, lc.seaDensity, []);
+      const wd = vessel.windage.map((r) => r.draft);
+      const A0 = lerp(wd, vessel.windage.map((r) => r.area), h0.draftMS, 'Windage table');
+      const hA0 = lerp(wd, vessel.windage.map((r) => r.centroidZ), h0.draftMS, 'Windage table');
+      const sideW = (2 * A0 * (ice.sideRate ?? 7.5) * k) / 1000;
+      if (sideW > 0) items.push({ group: 'Ice accretion', w: sideW, x: ice.sideX ?? vessel.lbp / 2, y: 0, z: hA0 });
+      warnings.push({ code: 'ICE_ACCRETION', message: `Ice accretion included (IS Code B 6.3.1${k !== 1 ? `, factor ${k}` : ''}): deck ${deckW.toFixed(2)} t, sides ${sideW.toFixed(2)} t (2 × ${A0.toFixed(1)} m² lateral area); wind area +5 %, its moment +10 %.` });
+    } else {
+      warnings.push({ code: 'ICE_ACCRETION', message: `Ice accretion: deck ${deckW.toFixed(2)} t included; ice on the sides NOT included because the vessel has no windage table.` });
+    }
+  }
   // Negative weight items are allowed: they remove a weight already included in the lightship
   // (e.g. a crane boom moved from its stowed position). They are reported as a warning.
   for (const w of lc.weights) {
@@ -54,7 +74,7 @@ export function calculate(vessel: Vessel, lc: LoadCase, library: CriteriaLibrary
     ? (lc.fsmTotal ?? 0)
     : kahanSum([...tanks.map((t) => t.fsm), ...lc.weights.map((w) => w.fsm ?? 0)]);
 
-  const summary = ['Lightship', 'Tanks', 'Variable weights'].map((group) => {
+  const summary = ['Lightship', 'Tanks', 'Variable weights', ...(items.some((i) => i.group === 'Ice accretion') ? ['Ice accretion'] : [])].map((group) => {
     const g = items.filter((i) => i.group === group);
     const w = kahanSum(g.map((i) => i.w));
     return {
@@ -203,6 +223,26 @@ export function calculate(vessel: Vessel, lc: LoadCase, library: CriteriaLibrary
     if (hit) return hit;
     const def: MomentDef | undefined = (library.moments ?? []).find((m) => m.id === id);
     if (!def) throw new EngineError('NO_MOMENT', 'the heeling moment used by this criterion no longer exists.');
+    if (def.input === 'TABLE') {
+      // moment or arm given at heel angles: linear between the points, the end value beyond the table
+      const tb = [...(def.table ?? [])].sort((a, b) => a.heel - b.heel);
+      if (tb.length < 2) throw new EngineError('FORMULA', `"${def.name}": the table needs at least two heel angles.`);
+      if (tb.some((p, i) => i > 0 && p.heel <= tb[i - 1].heel)) throw new EngineError('FORMULA', `"${def.name}": each heel angle may appear only once.`);
+      const at = (deg: number) => (deg <= tb[0].heel ? tb[0].value : deg >= tb[tb.length - 1].heel ? tb[tb.length - 1].value : lerp(tb.map((p) => p.heel), tb.map((p) => p.value), deg, def.name));
+      const arm = (deg: number) => (def.result === 'ARM' ? at(deg) : at(deg) / disp);
+      const rows = tableAngles().map((a) => ({ heel: a, moment: def.result === 'ARM' ? null : at(a), arm: arm(a) }));
+      const out = {
+        arm,
+        result: {
+          id: def.id, name: def.name, formula: def.formula || `table of ${def.result === 'ARM' ? 'heeling arm' : 'heeling moment'}`,
+          inputs: tb.map((p) => ({ name: `θ = ${p.heel}°`, source: 'Entered table', value: p.value, unit: def.result === 'ARM' ? 'm' : 't·m' })),
+          rows,
+          note: `${def.result === 'ARM' ? 'Heeling arm' : `Heeling arm = moment / displacement (Δ = ${disp.toFixed(2)} t)`} from the entered table: linear between the angles, the first / last value outside ${tb[0].heel}°–${tb[tb.length - 1].heel}°.`,
+        },
+      };
+      momentCache.set(id, out);
+      return out;
+    }
     const f = parseFormula(def.formula);
     const fixed: Record<string, number> = {};
     let heelVar: string | null = null;
@@ -386,6 +426,8 @@ export function calculate(vessel: Vessel, lc: LoadCase, library: CriteriaLibrary
     }
     const hasU = vessel.windage.every((r) => typeof r.underwaterCentroidZ === 'number');
     const hU = hasU ? lerp(wd, vessel.windage.map((r) => r.underwaterCentroidZ as number), draftMS, 'Windage table') : draftMean / 2;
+    // IS Code B 6.3.1.3 with ice: rails, booms and rigging add 5 % to the area and 10 % to its static moment
+    if (ice) return { A: A * 1.05, hA: hU + ((hA - hU) * 1.10) / 1.05, hU };
     return { A, hA, hU };
   }
 
@@ -403,8 +445,9 @@ export function calculate(vessel: Vessel, lc: LoadCase, library: CriteriaLibrary
 
   function computeWeather() { weatherVariant('IS'); }
   function computeWeatherA562() { weatherVariant('A562'); }
+  function computeWeatherTimber() { weatherVariant('TIMBER'); }
   /** IS Code 2008 A 2.3, or the original IMO A.562(14) (P = 0.0514 t/m², θ0 limit as a guide value). */
-  function weatherVariant(variant: 'IS' | 'A562') {
+  function weatherVariant(variant: 'IS' | 'A562' | 'TIMBER') {
     const { A, hA, hU } = windTable();
     const d = draftMean;
     const Z = hA - hU;
@@ -447,11 +490,13 @@ export function calculate(vessel: Vessel, lc: LoadCase, library: CriteriaLibrary
       areaA = integrateDeg((x) => lw2 - gzS(x), thetaR, thetaX);
       areaB = theta2 > thetaX ? integrateDeg((x) => gzS(x) - lw2, thetaX, theta2) : 0;
     }
-    const heelLimit = Math.min(16, 0.8 * deckEdgeAngle);
-    const idH = variant === 'A562' ? 'A562-HEEL' : 'IS-2.3-HEEL', idA = variant === 'A562' ? 'A562-AREA' : 'IS-2.3-AREA';
-    const reg = variant === 'A562' ? 'IMO A.562(14) 2.1' : 'IS Code 2008 A 2.3.1';
+    // timber deck cargo (IS Code A 3.3.2.4): the 16° limit applies, the 80 % of deck-edge angle may be ignored
+    const heelLimit = variant === 'TIMBER' ? 16 : Math.min(16, 0.8 * deckEdgeAngle);
+    const idH = variant === 'A562' ? 'A562-HEEL' : variant === 'TIMBER' ? 'TIMBER-2.3-HEEL' : 'IS-2.3-HEEL', idA = variant === 'A562' ? 'A562-AREA' : variant === 'TIMBER' ? 'TIMBER-2.3-AREA' : 'IS-2.3-AREA';
+    const reg = variant === 'A562' ? 'IMO A.562(14) 2.1' : variant === 'TIMBER' ? 'IS Code 2008 A 3.3.2.4 / 2.3' : 'IS Code 2008 A 2.3.1';
     special.set(idH, le(idH, variant === 'A562'
       ? `Steady wind heel θ₀ ≤ ${heelLimit < 16 ? '0.8 × deck edge angle' : '16°'} (guide value, to the satisfaction of the Administration)`
+      : variant === 'TIMBER' ? 'Steady wind heel θ₀ ≤ 16° (80 % of deck-edge angle not applied, timber deck cargo)'
       : `Steady wind heel θ₀ ≤ ${heelLimit < 16 ? '0.8 × deck edge angle' : '16°'}`, variant === 'A562' ? 'IMO A.562(14) 2.1.2 footnote' : reg, '°', heelLimit, theta0));
     const areaCrit = ge(idA, `Weather criterion: area b ≥ area a${variant === 'A562' ? ` (P = 0.0514 t/m²)` : ''}`, reg, 'm·rad', areaA, areaB);
     if (thetaX === null) {
@@ -459,7 +504,7 @@ export function calculate(vessel: Vessel, lc: LoadCase, library: CriteriaLibrary
       areaCrit.explanation = 'The gust wind heeling lever exceeds the maximum righting lever: the ship cannot resist the gust.';
     }
     special.set(idA, areaCrit);
-    if (variant === 'A562' && weather) return; // the IS Code 2008 weather details are already shown
+    if (variant !== 'IS' && weather) return; // the IS Code 2008 weather details are already shown
     weather = {
       P, A, Z, hA, lw1, lw2, Bd, Cb: cb, X1, X2, k, kBasis, r, OG, C, Troll, s,
       theta0, theta1, thetaR, thetaX, thetaC, theta2, areaA, areaB, deckEdgeAngle, side,
@@ -816,6 +861,7 @@ export function calculate(vessel: Vessel, lc: LoadCase, library: CriteriaLibrary
     'PONT-1': computePontoon, 'PONT-2': computePontoon, 'MODU-1': computeModu, 'MODU-2': computeModu, 'CRANE-5': computeCrane,
     'OSV-1': computeOSV1, 'IS-2.3-HEEL': computeWeather, 'IS-2.3-AREA': computeWeather,
     'A562-HEEL': computeWeatherA562, 'A562-AREA': computeWeatherA562,
+    'TIMBER-2.3-HEEL': computeWeatherTimber, 'TIMBER-2.3-AREA': computeWeatherTimber,
     'FIFI-1': computeFifi, 'CRANE-1': computeCrane, 'CRANE-2': computeCrane, 'CRANE-3': computeCrane, 'CRANE-4': computeCrane,
   };
   const specialErrors = new Map<() => void, string>();
@@ -865,7 +911,7 @@ export function calculate(vessel: Vessel, lc: LoadCase, library: CriteriaLibrary
     const angles = tableAngles();
     const constRows = (lever: number) => angles.map((a) => ({ heel: a, moment: lever * disp, arm: lever }));
     if (!error) {
-      if (g.chart === 'WEATHER' && weather) {
+      if ((g.chart === 'WEATHER' || g.criterionIds.some((c) => c.startsWith('TIMBER-2.3'))) && weather) {
         const w = weather as WeatherDetail;
         moments.push({ id: 'lw2', name: 'Gust wind heeling lever l_w2 = 1.5 · l_w1', formula: 'l_w2 = 1.5 · P·A·Z / (1000·g·Δ)', inputs: [
           { name: 'P', source: 'IS Code 2008', value: w.P, unit: 'N/m²' }, { name: 'A', source: 'Windage table at draft', value: w.A, unit: 'm²' },
@@ -955,6 +1001,8 @@ export function calculate(vessel: Vessel, lc: LoadCase, library: CriteriaLibrary
   const overallPass = groups.length > 0 && groups.every((g) => g.passed) && !warnings.some((w) => w.code === 'NEGATIVE_INITIAL_GM');
 
   const opl = checkLimits(lc, vessel, { draftAP, draftFP, draftMS, trim, heel, gmFluid });
+  // a warning raised by two groups (e.g. the weather criterion of IS 2008 and of timber deck cargo) is shown once
+  { const seen = new Set<string>(); for (let i = warnings.length - 1; i >= 0; i--) { const k = `${warnings[i].code}|${warnings[i].message}`; if (seen.has(k)) warnings.splice(i, 1); else seen.add(k); } }
   const result: Results = {
     displacement: disp,
     deadweight: disp - vessel.lightship.weight,
