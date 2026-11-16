@@ -226,7 +226,7 @@ function GroupSection({ g, r, lc, onChange }: { g: CriteriaGroupResult; r: Resul
   const run = async (kind: 'png' | 'svg' | 'csv') => {
     try {
       let out: SaveOutcome;
-      if (kind === 'csv') out = await saveFile(`${base}_GZ_table.csv`, new Blob([gzCsv(g, [`# ${g.name} · ${lc.name}`, `# heel to ${r.side < 0 ? 'port' : 'starboard'}; LCG from AP; not an approved stability instrument`])], { type: 'text/csv' }));
+      if (kind === 'csv') out = await saveFile(`${base}_GZ_table.csv`, new Blob([gzCsv(g, [`# ${g.name} · ${lc.name}`, `# heel to ${r.side < 0 ? 'port' : 'starboard'}; LCG from AP`])], { type: 'text/csv' }));
       else {
         const svg = chartRef.current?.querySelector('svg');
         if (!svg) return;

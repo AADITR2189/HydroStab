@@ -22,7 +22,8 @@ export interface ReportInput {
   allCases?: { lc: LoadCase; r: Results | null; error: string | null }[];
 }
 
-export const DISCLAIMER = 'Not an approved stability instrument. For planning and testing only.';
+/** Footer note of reports: shown only when the vessel data is not verified. */
+export const dataNote = (status: string) => (status === 'UNVERIFIED' ? 'Vessel data not verified.' : '');
 
 export const n = (v: number | null | undefined, dp: number) =>
   v === null || v === undefined || !Number.isFinite(v) ? '—' : v.toFixed(dp);

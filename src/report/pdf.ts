@@ -6,7 +6,7 @@ import type { CriteriaGroupResult, Results } from '../engine/types';
 import { ENGINE_VERSION } from '../engine/stability';
 import { DEJAVU_BOLD, DEJAVU_REGULAR } from './fonts/dejavu';
 import {
-  DISCLAIMER, conditionRows, criterionCells, n, particularsRows, reportHash, tankRowsByType, traceRows, weightRows, type ReportInput,
+  dataNote, conditionRows, criterionCells, n, particularsRows, reportHash, tankRowsByType, traceRows, weightRows, type ReportInput,
 } from './reportData';
 
 type Doc = jsPDF & { lastAutoTable?: { finalY: number } };
@@ -155,7 +155,7 @@ export async function buildPdf(input: ReportInput): Promise<Blob> {
     doc.text(`Report ${hash.slice(0, 12)} · engine ${ENGINE_VERSION}`, M, H - 9);
     doc.text(`Page ${i} of ${pages}`, W - M, H - 9, { align: 'right' });
     doc.setTextColor(...FAIL);
-    doc.text(DISCLAIMER + (meta.dataStatus === 'UNVERIFIED' ? ' Vessel data not verified.' : ''), M, H - 5.5);
+    if (dataNote(meta.dataStatus)) doc.text(dataNote(meta.dataStatus), M, H - 5.5);
   }
   return doc.output('blob');
 }

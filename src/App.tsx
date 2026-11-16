@@ -193,7 +193,6 @@ export default function App() {
         <StorageBadge />
         <span>Engine {ENGINE_VERSION}</span>
         <button className="link" onClick={() => setShowKeys(true)}>Keyboard shortcuts <kbd className="kbd">?</kbd></button>
-        <span className="disclaimer">Not an approved stability instrument. For planning and testing only.</span>
       </footer>
       <UpdatePrompt />
       <Toast msg={toast} onDone={() => setToast(null)} />

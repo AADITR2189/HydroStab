@@ -4,7 +4,7 @@ import ExcelJS from 'exceljs';
 import type { Results } from '../engine/types';
 import { groupByType, typeTotals } from '../engine/tankTypes';
 import {
-  DISCLAIMER, conditionRows, criterionCells, particularsRows, reportHash, traceRows, type ReportInput,
+  dataNote, conditionRows, criterionCells, particularsRows, reportHash, traceRows, type ReportInput,
 } from './reportData';
 
 const HEAD = { type: 'pattern' as const, pattern: 'solid' as const, fgColor: { argb: 'FF1F3A5F' } };
@@ -34,7 +34,7 @@ export async function buildXlsx(input: ReportInput): Promise<Blob> {
   const title = (ws: ExcelJS.Worksheet, t: string) => {
     ws.addRow([t]).getCell(1).font = TITLE_FONT;
     ws.addRow([`${vessel.name} · IMO ${vessel.imo} · ${lc.name}`]);
-    ws.addRow([DISCLAIMER + (meta.dataStatus === 'UNVERIFIED' ? ' Vessel data not verified.' : '')]).getCell(1).font = { color: { argb: 'FFC81E46' }, italic: true };
+    if (dataNote(meta.dataStatus)) ws.addRow([dataNote(meta.dataStatus)]).getCell(1).font = { color: { argb: 'FFC81E46' }, italic: true };
     ws.addRow([]);
   };
 

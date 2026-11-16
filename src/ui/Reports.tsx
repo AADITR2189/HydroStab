@@ -73,7 +73,7 @@ export function ReportsScreen({ vessel, status, source, cases, activeId, calc }:
       <section className="panel">
         <div className="panel-head"><h2>What the report contains</h2></div>
         <ul>
-          <li><b>PDF:</b> result summary, vessel particulars, loading condition and GM, weights, tanks, all criteria, one page per stability group (GZ curve, criteria, GZ table, moment calculations), warnings and calculation trace. Every page carries the report ID and the disclaimer.</li>
+          <li><b>PDF:</b> result summary, vessel particulars, loading condition and GM, weights, tanks, all criteria, one page per stability group (GZ curve, criteria, GZ table, moment calculations), warnings and calculation trace. Every page carries the report ID.</li>
           <li><b>Excel:</b> Summary, Weights, Tanks, Criteria, one GZ sheet per stability group with moment tables, All load cases, Trace. Plain values with number formats, ready for your own checks.</li>
         </ul>
       </section>
