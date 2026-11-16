@@ -11,8 +11,9 @@ import {
 
 type Doc = jsPDF & { lastAutoTable?: { finalY: number } };
 const M = 14; // page margin (mm)
-const INK = [22, 25, 28] as const, MUTED = [80, 98, 110] as const, ACCENT = [244, 91, 11] as const, NAVY = [31, 58, 95] as const;
-const PASS = [21, 128, 61] as const, FAIL = [200, 30, 70] as const;
+// report colours = the app's chart palette: ink, chart blue (GZ, headings), chart magenta (heeling arms, GZ max)
+const INK = [26, 32, 29] as const, MUTED = [86, 97, 91] as const, ACCENT = [163, 25, 91] as const, NAVY = [36, 95, 128] as const, HEAD = [34, 48, 43] as const;
+const PASS = [36, 115, 58] as const, FAIL = [180, 35, 24] as const;
 
 export async function buildPdf(input: ReportInput): Promise<Blob> {
   const hash = await reportHash(input);
@@ -31,18 +32,18 @@ export async function buildPdf(input: ReportInput): Promise<Blob> {
   const table = (head: string[] | null, body: string[][], opts: Record<string, unknown> = {}) => {
     autoTable(doc, {
       head: head ? [head] : undefined, body, startY: y, margin: { left: M, right: M, top: 22, bottom: 18 },
-      styles: { font: 'DejaVu', fontSize: 7.5, cellPadding: 1.2, textColor: [...INK], lineColor: [200, 205, 210], lineWidth: 0.1 },
-      headStyles: { fillColor: [...NAVY], textColor: 255, fontStyle: 'bold' },
-      alternateRowStyles: { fillColor: [245, 247, 249] },
+      styles: { font: 'DejaVu', fontSize: 7.5, cellPadding: 1.2, textColor: [...INK], lineColor: [205, 212, 202], lineWidth: 0.1 },
+      headStyles: { fillColor: [...HEAD], textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [244, 246, 242] },
       ...opts,
     });
     y = (doc.lastAutoTable?.finalY ?? y) + 5;
   };
   const heading = (text: string, size = 12) => {
     if (y > H - 40) { doc.addPage(); y = 24; }
-    doc.setFont('DejaVu', 'bold'); doc.setFontSize(size); doc.setTextColor(...NAVY);
+    doc.setFont('DejaVu', 'bold'); doc.setFontSize(size); doc.setTextColor(...HEAD);
     doc.text(text, M, y); y += size === 12 ? 2 : 1.5;
-    doc.setDrawColor(...ACCENT); doc.setLineWidth(0.5); doc.line(M, y, W - M, y); y += 4;
+    doc.setDrawColor(...NAVY); doc.setLineWidth(0.4); doc.line(M, y, W - M, y); y += 4;
     doc.setFont('DejaVu', 'normal'); doc.setTextColor(...INK);
   };
   const para = (text: string, size = 8, color: readonly number[] = INK) => {
@@ -54,7 +55,7 @@ export async function buildPdf(input: ReportInput): Promise<Blob> {
   };
 
   // ---------- title block ----------
-  doc.setFont('DejaVu', 'bold'); doc.setFontSize(18); doc.setTextColor(...NAVY);
+  doc.setFont('DejaVu', 'bold'); doc.setFontSize(18); doc.setTextColor(...HEAD);
   doc.text('Intact Stability Report', M, y + 6); y += 12;
   doc.setFontSize(11); doc.setTextColor(...INK);
   doc.text(`${vessel.name}  ·  IMO ${vessel.imo}`, M, y); y += 6;
@@ -95,7 +96,7 @@ export async function buildPdf(input: ReportInput): Promise<Blob> {
     didParseCell: (d: { section: string; row: { index: number }; column: { index: number }; cell: { styles: Record<string, unknown>; colSpan?: number } }) => {
       if (d.section !== 'body') return;
       const k = tt[d.row.index]?.kind;
-      if (k === 'head') { d.cell.styles.fillColor = [226, 236, 236]; d.cell.styles.fontStyle = 'bold'; d.cell.styles.textColor = [...NAVY]; }
+      if (k === 'head') { d.cell.styles.fillColor = [231, 235, 229]; d.cell.styles.fontStyle = 'bold'; d.cell.styles.textColor = [...HEAD]; }
       if (k === 'total') { d.cell.styles.fontStyle = 'bold'; d.cell.styles.fillColor = [250, 250, 250]; }
     },
   });
@@ -224,7 +225,7 @@ function drawGroupChart(doc: Doc, x0: number, y0: number, w: number, h: number, 
     fill(wx.thetaX, wx.theta2, () => wx.lw2, PASS, 0.22);
   }
   for (const c of g.criteria) for (const v of c.viz ?? []) {
-    if (v.type === 'area') fill(v.from, v.to, () => 0, [120, 170, 170], 0.3);
+    if (v.type === 'area') fill(v.from, v.to, () => 0, [120, 175, 205], 0.3);
     if (v.type === 'residArea') fill(v.from, v.to, (xx) => interp(v.points.map((p) => ({ heel: p.heel, gz: p.arm })), xx), PASS, 0.22);
   }
   // heeling arms

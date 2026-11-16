@@ -344,7 +344,7 @@ Online help (context-sensitive), a User Manual (PDF), a Data Preparation Guide (
 | RPT-003 | Reports shall be generated offline on the client and be identical to server-generated versions. | M |
 | RPT-004 | Issued reports are immutable and stored with the run hash. A QR code / ID on each page allows verification of authenticity. | M (QR: S) |
 | RPT-005 | Report templates may be branded per organisation (logo, colours, header/footer). | S |
-| RPT-006 | Until the system is class-approved, every page shall carry "Not an approved stability instrument — for planning purposes only" (configurable only by a system-level flag after approval). | M |
+| RPT-006 | ~~Until the system is class-approved, every page shall carry "Not an approved stability instrument — for planning purposes only".~~ **Changed (Nov 2026, owner decision):** the notice is removed from the app and reports after the results were checked by several users. Reports still say "Vessel data not verified" for vessels whose data is not verified. To be re-introduced if required for class approval. | — |
 
 #### 3.2.15 Users, roles, security & audit (SEC)
 | ID | Requirement | Pri |

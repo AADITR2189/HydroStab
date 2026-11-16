@@ -11,6 +11,21 @@
 
 ---
 
+## As built (November 2026)
+
+The working app differs from the original specification below in these points:
+
+| Topic | As built |
+|---|---|
+| Platform | One offline web app (PWA) for PC / laptop; no login, no server. Phone layouts are not a target |
+| Theme "Admiralty" | Colours of a navigational chart: light = chart-paper grey-green with ink text and ink buttons; chart blue for selection and the GZ curve; chart magenta for markers (active screen, GZ max, heeling arms); shading in shallow-water blue and land buff. Dark = "night bridge", the same colours dimmed. Follows the computer's setting or is chosen in the top bar / Settings |
+| Type | IBM Plex Sans for text, IBM Plex Mono for labels and key figures (bundled for offline use); tabular numbers; sizes in rem, minimum 12 px |
+| Shape and motion | Square corners (3–4 px), flat panels with hairline borders. Short motion: press feedback, screens rise in, GZ curve draws in, badges pop, values glide; all off with "reduce motion" (computer or Settings) |
+| Screens | Dashboard · Vessels · Import Data · Data Tables · Load Case · Stability Results · Compare · Criteria Setup · Reports · Settings (Alt+1 … Alt+0); each screen has its own address, so Back / Forward work |
+| Status bar | Online state, storage state and last backup, engine version, keyboard shortcuts. The approval notice was removed (see SRS RPT-006) |
+| Editing | Undo / redo of every change (Ctrl+Z / Ctrl+Y), kept after closing the app; deletions offer Undo; edit forms open in place |
+
+
 ## 1. Design philosophy
 
 **"Bridge-grade clarity."** The interface should feel like premium marine engineering software, in the tradition of NAPA, Maxsurf and Kongsberg K-Chief: dense, precise and calm. It should never feel like a consumer web app.
@@ -94,7 +109,7 @@ App shell, Left nav, Top bar, Status bar, Panel (dockable), Tabs, Data grid (vir
 - **Top bar:** vessel switcher, load-case switcher, global search/command palette, theme toggle, user menu.
 - **Left navigation:** collapsible to an icon rail. Badges show counts or warnings (e.g. "Tanks ⚠ 2").
 - **Results sidebar:** visible on every load-case-related screen. It shows live results while editing.
-- **Status bar:** connectivity, sync, data state, engine version, approval disclaimer.
+- **Status bar:** connectivity, sync, data state, engine version. *(As built: the approval notice was removed; see SRS RPT-006.)*
 
 ---
 

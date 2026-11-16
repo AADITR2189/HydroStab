@@ -200,7 +200,7 @@ The authoritative list is in **SS-SRS-001 §3.2**. In summary by module:
 |---|---|---|
 | PDF extraction quality varies widely across booklets | High manual effort | Side-by-side verification UI, mapping templates, AI-assist, manual-entry fallback |
 | Tabulated hydrostatics inaccurate at large trim | Wrong drafts | Trimmed tables (free-trim), `LARGE_TRIM_ACCURACY` warning, Phase 3 hull model |
-| Users treat unapproved software as approved | Regulatory exposure | Mandatory disclaimer until class approval (RPT-006) |
+| Users treat unapproved software as approved | Regulatory exposure | ~~Mandatory disclaimer until class approval (RPT-006)~~ Owner decision (Nov 2026): notice removed after verification by several users; the approval status is stated in the README. Re-introduce if required |
 | Offline conflicts | Lost work | Never auto-merge; keep both versions |
 | Engine discrepancy client vs server | Trust loss | Same code package, server re-verification (CALC-013), dual implementation testing |
 | Scope creep into damage stability | Delay | Strict phase gates; module architecture prepared, not implemented |

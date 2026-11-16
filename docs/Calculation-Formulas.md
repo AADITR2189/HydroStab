@@ -53,7 +53,7 @@ From the volume:
   - The "Maximum" free surface method uses the same i_t,max for every slack tank.
 - Checks:
   - A volume above capacity is an error.
-  - A filling between 98 % and 100 % gives a warning.
+  - A filling between the warning level and 100 % gives a warning. The level is set in Settings (default 98 %); 100 % (pressed up) never warns.
 
 ## 2 Weights summation (`stability.ts`)
 

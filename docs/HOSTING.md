@@ -40,11 +40,11 @@ downloads its files (about 11 MB) the first time it is used, then also works off
 
 - Each device keeps its own data in the **browser database (IndexedDB)** of the app: your vessels, load
   cases, criteria library and the data record of every import or edit. It is saved on every change.
-- The app asks the browser to keep this data **permanently** (shown in *Vessel Database → Storage on
+- The app asks the browser to keep this data **permanently** (shown in *Vessels or Settings → Storage on
   this device*). Installed apps usually get this.
 - Data of older versions (browser localStorage) is moved into the database automatically on the first
   start.
-- Data is **not shared** between devices or browsers. Use **Vessel Database → Save database to file**
+- Data is **not shared** between devices or browsers. Use **Vessels → Save database to file** (or Ctrl+S)
   to back up and to move data (import it with *Merge* or *Replace* on the other device).
 - A reminder appears when there are changes that are not yet in a database file (every 7 days by
   default; change it in *Storage on this device*).

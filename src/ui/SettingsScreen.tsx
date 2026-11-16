@@ -4,6 +4,7 @@ import type { FsmMethod, GroupDef } from '../engine/types';
 import { BUILTIN_GROUPS, DEFAULT_GROUP_IDS } from '../engine/criteriaGroups';
 import { resetSettings, setSetting, settingProblem, useSettings, type AppSettings } from '../settings';
 import { StoragePanel, ThemeSwitch } from './AppShell';
+import { clearHistory, keptSteps, PERSIST_LIMIT } from './history';
 
 function Saved({ on }: { on: boolean }) { return on ? <span className="saved-tick" role="status">✓ Saved</span> : null; }
 
@@ -37,6 +38,7 @@ export function SettingsScreen({ customGroups }: { customGroups: GroupDef[] }) {
   const s = useSettings();
   const [resetAsk, setResetAsk] = useState(false);
   const [rk, setRk] = useState(0);
+  const [steps, setSteps] = useState(keptSteps);
   const [rangeErr, setRangeErr] = useState<string | null>(null);
   const [range, setRange] = useState(s.gzRange ?? { from: 0, to: 90, step: 5 });
   const groups = [...BUILTIN_GROUPS, ...customGroups];
@@ -117,6 +119,10 @@ export function SettingsScreen({ customGroups }: { customGroups: GroupDef[] }) {
           <div className="set-row">
             <span className="set-label">Tank fill warning<small>Tanks filled between this value and 100 % give a warning (100 % = pressed up, no warning).</small></span>
             <NumField k="overfillWarnPct" value={s.overfillWarnPct} step={0.5} unit="%" />
+          </div>
+          <div className="set-row">
+            <span className="set-label">Undo history<small>The last {PERSIST_LIMIT} changes are kept on this computer, so Undo still works after closing the app. Each step holds a copy of your data.</small></span>
+            <span>{steps} step{steps === 1 ? '' : 's'} kept <button className="ghost tiny" disabled={!steps} onClick={() => { clearHistory(); setSteps(0); }}>Clear</button></span>
           </div>
         </section>
       </div>

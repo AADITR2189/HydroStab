@@ -7,8 +7,8 @@ import {
   dataNote, conditionRows, criterionCells, particularsRows, reportHash, traceRows, type ReportInput,
 } from './reportData';
 
-const HEAD = { type: 'pattern' as const, pattern: 'solid' as const, fgColor: { argb: 'FF1F3A5F' } };
-const TITLE_FONT = { bold: true, size: 14, color: { argb: 'FF1F3A5F' } };
+const HEAD = { type: 'pattern' as const, pattern: 'solid' as const, fgColor: { argb: 'FF22302B' } };
+const TITLE_FONT = { bold: true, size: 14, color: { argb: 'FF22302B' } };
 
 export async function buildXlsx(input: ReportInput): Promise<Blob> {
   const hash = await reportHash(input);
@@ -34,7 +34,7 @@ export async function buildXlsx(input: ReportInput): Promise<Blob> {
   const title = (ws: ExcelJS.Worksheet, t: string) => {
     ws.addRow([t]).getCell(1).font = TITLE_FONT;
     ws.addRow([`${vessel.name} · IMO ${vessel.imo} · ${lc.name}`]);
-    if (dataNote(meta.dataStatus)) ws.addRow([dataNote(meta.dataStatus)]).getCell(1).font = { color: { argb: 'FFC81E46' }, italic: true };
+    if (dataNote(meta.dataStatus)) ws.addRow([dataNote(meta.dataStatus)]).getCell(1).font = { color: { argb: 'FFB42318' }, italic: true };
     ws.addRow([]);
   };
 
@@ -45,7 +45,7 @@ export async function buildXlsx(input: ReportInput): Promise<Blob> {
   kv(s, [['Load case', `${lc.name} (${lc.type})`], ['Date', meta.createdAt.toISOString().slice(0, 10)], ...(meta.company ? [['Company', meta.company] as [string, string]] : []), ['Prepared by', meta.preparedBy || '—'], ['Checked by', meta.checkedBy || '—'],
     ['Overall result', r.overallPass ? 'PASS' : 'FAIL'], ['Remarks', meta.remarks || '—']]);
   const res = s.getRow(s.rowCount - 1).getCell(2);
-  res.font = { bold: true, color: { argb: r.overallPass ? 'FF15803D' : 'FFC81E46' } };
+  res.font = { bold: true, color: { argb: r.overallPass ? 'FF24733A' : 'FFB42318' } };
   s.addRow([]); s.addRow(['Vessel particulars']).getCell(1).font = TITLE_FONT;
   kv(s, particularsRows(vessel));
   s.addRow([]); s.addRow(['Loading condition and initial stability']).getCell(1).font = TITLE_FONT;
@@ -53,7 +53,7 @@ export async function buildXlsx(input: ReportInput): Promise<Blob> {
   s.addRow([]); s.addRow(['Stability groups']).getCell(1).font = TITLE_FONT;
   for (const g of r.groups) {
     const row = s.addRow([g.name, `${g.error ? 'NOT EVALUATED' : g.passed ? 'PASS' : 'FAIL'} · ${g.criteria.filter((c) => c.passed).length}/${g.criteria.length} criteria · ${g.regulation}`]);
-    row.getCell(2).font = { bold: true, color: { argb: g.passed ? 'FF15803D' : 'FFC81E46' } };
+    row.getCell(2).font = { bold: true, color: { argb: g.passed ? 'FF24733A' : 'FFB42318' } };
   }
 
   // ---------- Weights ----------
@@ -70,15 +70,15 @@ export async function buildXlsx(input: ReportInput): Promise<Blob> {
 
   // ---------- Tanks ----------
   const t = wb.addWorksheet(sheetName('Tanks'));
-  t.columns = [{ width: 22 }, { width: 11 }, { width: 9 }, { width: 12 }, { width: 10 }, { width: 11 }, { width: 11 }, { width: 11 }, { width: 11 }, { width: 11 }];
+  t.columns = [{ width: 22 }, { width: 11 }, { width: 9 }, { width: 12 }, { width: 10 }, { width: 11 }, { width: 11 }, { width: 11 }, { width: 11 }, { width: 11 }, { width: 10 }];
   title(t, 'Tank status by tank type');
-  header(t, ['Tank', 'Input', '%', 'Volume (m³)', 'ρ (t/m³)', 'Weight (t)', 'LCG (m)', 'TCG (m)', 'VCG (m)', 'FSM (t·m)']);
+  header(t, ['Tank', 'Input', '%', 'Volume (m³)', 'ρ (t/m³)', 'Weight (t)', 'LCG (m)', 'TCG (m)', 'VCG (m)', 'FSM (t·m)', 'Max FSM']);
   for (const g of groupByType(vessel, vessel.tanks, (x) => x)) {
     const rs = g.items.map((x) => r.tanks.find((y) => y.tankId === x.id)).filter((x): x is NonNullable<typeof x> => !!x);
     const hr = t.addRow([`${g.type.name} (${g.items.length} tanks)`]);
-    hr.font = { bold: true, color: { argb: 'FF1F3A5F' } };
-    hr.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2ECEC' } };
-    for (const k of rs) t.addRow([k.name, k.mode.toLowerCase(), k.percent, k.volume, k.density, k.weight, k.lcg, k.tcg, k.vcg, k.fsm]);
+    hr.font = { bold: true, color: { argb: 'FF22302B' } };
+    hr.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE7EBE5' } };
+    for (const k of rs) t.addRow([k.name, k.mode.toLowerCase(), k.percent, k.volume, k.density, k.weight, k.lcg, k.tcg, k.vcg, k.fsm, k.fsmMax ? 'yes' : '']);
     const tot = typeTotals(rs);
     const cap = g.items.reduce((s2, x) => s2 + x.capacity, 0);
     const sr = t.addRow([`Subtotal ${g.type.name}`, '', cap > 0 ? (tot.volume / cap) * 100 : 0, tot.volume, '', tot.weight, tot.weight > 0 ? tot.lcg : '', tot.weight > 0 ? tot.tcg : '', tot.weight > 0 ? tot.vcg : '', tot.fsm]);
@@ -97,7 +97,7 @@ export async function buildXlsx(input: ReportInput): Promise<Blob> {
     for (const k of g.criteria) {
       const cells = criterionCells(k);
       const row = c.addRow([g.name, cells[0], cells[1], cells[2], k.actual, k.marginAbs, k.marginPct, cells[6], k.explanation ?? '']);
-      row.getCell(8).font = { bold: true, color: { argb: k.passed ? 'FF15803D' : 'FFC81E46' } };
+      row.getCell(8).font = { bold: true, color: { argb: k.passed ? 'FF24733A' : 'FFB42318' } };
       row.getCell(5).numFmt = k.unit === 'm·rad' ? '0.0000' : '0.000';
       row.getCell(6).numFmt = k.unit === 'm·rad' ? '0.0000' : '0.000';
       row.getCell(7).numFmt = '0.0';
@@ -112,7 +112,7 @@ export async function buildXlsx(input: ReportInput): Promise<Blob> {
   header(ol, ['Limit', 'In use', 'Required', 'Actual', 'Unit', 'Status', 'Note']);
   for (const x of r.opLimits) {
     const row = ol.addRow([x.label, x.enabled ? 'yes' : 'no', x.limit, x.actual, x.unit, x.enabled ? (x.passed ? 'PASS' : 'FAIL') : 'not used', x.note ?? '']);
-    if (x.enabled) row.getCell(6).font = { bold: true, color: { argb: x.passed ? 'FF15803D' : 'FFC81E46' } };
+    if (x.enabled) row.getCell(6).font = { bold: true, color: { argb: x.passed ? 'FF24733A' : 'FFB42318' } };
   }
   numFmt(ol, [3, 4], '0.000');
 

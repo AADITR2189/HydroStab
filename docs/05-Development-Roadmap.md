@@ -8,6 +8,20 @@
 | Version | 0.1 (Draft) |
 | Owner | Product Manager / Technical Lead |
 
+## Progress (as built, November 2026)
+
+The working version is a single offline web app (PWA) on PC / laptop, without server, login or sync. Progress against the plan:
+
+| Phase | Done | Open |
+|---|---|---|
+| **1 Vessel database, hydrostatics, tanks, intact stability** | Vessels and data editors (particulars, lightship, hydrostatics and KN for several trims, tanks with types, windage, openings, operational limits); import from PDF (incl. scanned), Excel, Word, CSV with cell-by-cell verification and sign-off; calculation engine (summation, hydrostatics incl. free trim, FSC methods incl. max FSM per tank, GZ, flooding angle, IS 2.2, weather 2.3) with 220 automatic tests; load cases (editor, duplicate, compare, arrival generator, file export); Stability Results; PDF / Excel reports with checksum; offline storage, database file, backup reminder; undo / redo; settings | Server, login and roles, sync between computers, report issue & lock, onboard pilot sign-off |
+| **2 Advanced criteria** | Own criteria and heeling-moment formulas, own groups; passenger ships, grain, pontoons, MODU, crane / lifting (B 2.9), anchor handling / towing / escort (MSC.415), BV fire-fighting, superseded IMO sets; free-trim hydrostatics and KN | Ice accretion, timber deck cargo, heeling arm as a table, longitudinal strength, fleet dashboard |
+| **3 Damage stability** | — | All (needs a hull and compartment model) |
+| **4 Desktop / mobile** | Installable PWA on PC | Native desktop app (Tauri), tablet layout |
+| **5 Class integration** | Traceable data records, fixed formulas, report checksums | Type approval submission, approved-mode lock |
+
+The sections below are the original plan.
+
 > Durations assume the core team below and 2-week sprints. They are planning estimates to be refined at each phase gate.
 
 ## Team (Phase 1)
