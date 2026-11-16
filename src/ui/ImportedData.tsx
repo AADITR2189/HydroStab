@@ -9,6 +9,7 @@ import { tankTypes } from '../engine/tankTypes';
 import { applyTable, checkTable, columnsOf, diffRows, listDatasets, tableOf, type DsRef } from '../importer/datasetTables';
 import { LightshipForm, ParticularsForm } from './VesselManager';
 import { TankTypesEditor, TankTypesView } from './TankTypesEditor';
+import { getSettings } from '../settings';
 
 interface Props {
   current: VesselEntry;
@@ -131,7 +132,7 @@ function MaxFsmRow({ tank, mine }: { tank: Tank; mine?: (t: Tank, by: string, wh
   const [open, setOpen] = useState(false);
   const [val, setVal] = useState<number | ''>(tank.maxInertia ? Number((tank.maxInertia * tank.density).toFixed(2)) : '');
   const [sg, setSg] = useState<number>(tank.density);
-  const [by, setBy] = useState('');
+  const [by, setBy] = useState(() => getSettings().userName);
   return (
     <div className="notice" style={{ marginBottom: 10 }}>
       <b>Max FSM</b> (used when "max FSM" is ticked in a load case): {(used * tank.density).toFixed(1)} t·m at ρ {tank.density} (i_T {used.toFixed(2)} m⁴)
@@ -162,7 +163,7 @@ function TableDataset({ ref_, v, mine, save, editing, setEditing, onDeleted }: {
   const cols = columnsOf(v, ref);
   const before = useMemo(() => tableOf(v, ref), [v, ref]);
   const [rows, setRows] = useState(() => before.map((r, i) => ({ orig: i as number | null, vals: [...r] })));
-  const [by, setBy] = useState('');
+  const [by, setBy] = useState(() => getSettings().userName);
   const [reason, setReason] = useState('');
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [confirmDel, setConfirmDel] = useState(false);

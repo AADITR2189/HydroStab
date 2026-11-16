@@ -6,6 +6,7 @@ import type { Provenance } from '../importer/apply';
 import type { SourceDoc } from '../importer/sources';
 import { DEFAULT_DRAFT, DEFAULT_HEADING, findWindCases, windRows, withDraft, type WindCase } from '../importer/windageParts';
 import { PdfPage } from './PdfPage';
+import { getSettings } from '../settings';
 
 interface Props { doc: SourceDoc; vessel: Vessel; target: UserVesselEntry | undefined; save: (u: UserVesselEntry) => void }
 
@@ -21,7 +22,7 @@ export function WindageBookletSection({ doc, vessel, target, save }: Props) {
   const [open, setOpen] = useState<string | null>(null);
   const hydroDrafts = vessel.hydro.rows.map((r) => r.draft);
   const [extend, setExtend] = useState(false);
-  const [verifier, setVerifier] = useState('');
+  const [verifier, setVerifier] = useState(() => getSettings().userName);
   const [confirm, setConfirm] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
 

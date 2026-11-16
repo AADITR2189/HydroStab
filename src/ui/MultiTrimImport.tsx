@@ -11,6 +11,7 @@ import type { Check } from '../importer/checks';
 import { ReviewTable, SourceGrid } from './ImportTables';
 import { applyRefs, DRAFT_REF_LABEL, KN_BASIS_LABEL, type DraftRef, type KnBasis } from '../importer/references';
 import { PdfPage } from './PdfPage';
+import { getSettings } from '../settings';
 
 interface Props { kind: TrimKind; doc: SourceDoc; vessel: Vessel; target: UserVesselEntry | undefined; save: (u: UserVesselEntry) => void }
 
@@ -42,7 +43,7 @@ export function MultiTrimSection({ kind, doc, vessel, target, save }: Props) {
   useEffect(() => { setImports(mapping ? buildTrimImports(kind, blocks, { ...mapping, lbp: vessel.lbp }) : []); setResult(null); setConfirm(false); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [blocks, mapping, vessel.lbp, kind]);
   const [open, setOpen] = useState<string | null>(null);
   const [replaceAll, setReplaceAll] = useState(true);
-  const [verifier, setVerifier] = useState('');
+  const [verifier, setVerifier] = useState(() => getSettings().userName);
   const [confirm, setConfirm] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
 

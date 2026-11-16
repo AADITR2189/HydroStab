@@ -8,7 +8,7 @@ const DB_NAME = 'stabilitysoft';
 const STORE = 'kv';
 /** Keys that hold the user's data (and older localStorage keys moved on first start). */
 export const DATA_KEYS = ['stabilitysoft.uservessels.v1', 'stabilitysoft.loadcases.v3', 'stabilitysoft.library.v1', 'stabilitysoft.active.v3'];
-export const META = { lastBackup: 'meta.lastBackup', lastChange: 'meta.lastChange', backupDays: 'settings.backupDays', remindAfter: 'meta.remindAfter', migrated: 'meta.migratedFromLocalStorage' };
+export const META = { lastBackup: 'meta.lastBackup', lastChange: 'meta.lastChange', backupDays: 'settings.backupDays', remindAfter: 'meta.remindAfter', migrated: 'meta.migratedFromLocalStorage', settings: 'settings.app' };
 
 export type Backend = 'indexeddb' | 'localStorage' | 'memory';
 export interface StorageStatus {

@@ -16,10 +16,12 @@ import { UpdatePrompt } from './ui/UpdatePrompt';
 import { CriteriaLibraryScreen } from './ui/CriteriaLibrary';
 import { ReportsScreen } from './ui/Reports';
 import { CompareScreen } from './ui/Compare';
+import { SettingsScreen } from './ui/SettingsScreen';
+import { applyMotion, useSettings } from './settings';
 import { LoadCaseEditor } from './ui/LoadCaseEditor';
 import { Criteria, Dashboard, ResultsSidebar, VesselData } from './ui/Screens';
 
-type Screen = 'dashboard' | 'loadcase' | 'criteria' | 'compare' | 'library' | 'vessel' | 'reports' | 'import' | 'data';
+type Screen = 'dashboard' | 'loadcase' | 'criteria' | 'compare' | 'library' | 'vessel' | 'reports' | 'import' | 'data' | 'settings';
 const NAV: { id: Screen; label: string; icon: IconName; title: string; about: string; sepBefore?: boolean }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', title: 'Dashboard', about: 'Vessel particulars and every load case at a glance.' },
   { id: 'vessel', label: 'Vessels', icon: 'ship', title: 'Vessels', about: 'Your vessels, the built-in ones, and the database file for backup and transfer.', sepBefore: true },
@@ -30,6 +32,7 @@ const NAV: { id: Screen; label: string; icon: IconName; title: string; about: st
   { id: 'compare', label: 'Compare', icon: 'compare', title: 'Compare Load Cases', about: 'Drafts, stability, GZ curves and every criterion of several load cases side by side.' },
   { id: 'library', label: 'Criteria Setup', icon: 'library', title: 'Criteria Setup', about: 'Your own criteria, heeling moments and stability groups.' },
   { id: 'reports', label: 'Reports', icon: 'report', title: 'Reports', about: 'PDF and Excel reports of the load cases.', sepBefore: true },
+  { id: 'settings', label: 'Settings', icon: 'settings', title: 'Settings', about: 'Your name and company, defaults for new load cases, calculation and display options of this computer.' },
 ];
 const SCREENS = NAV.map((n) => n.id);
 const screenFromHash = (): Screen => { const h = location.hash.replace('#', '') as Screen; return SCREENS.includes(h) ? h : 'dashboard'; };
@@ -40,6 +43,8 @@ export default function App() {
   const entries = useMemo(() => [...VESSELS, ...userVessels.list.map(toEntry)], [userVessels.list]);
   const store = useLoadCases(entries);
   const library = useLibrary();
+  const settings = useSettings();
+  useEffect(() => applyMotion(settings.reduceMotion), [settings.reduceMotion]);
   const vessel = store.entry.vessel;
   const status = store.entry.status;
   const lc = store.active;
@@ -80,12 +85,12 @@ export default function App() {
     const missing = [!vessel.hydro.rows.length && 'hydrostatic table', !vessel.kn.displacements.length && 'cross curves (KN)', !(vessel.lbp > 0) && 'particulars', !(vessel.lightship.weight > 0) && 'lightship'].filter(Boolean);
     if (missing.length) return { r: null, error: `Vessel data incomplete: ${missing.join(', ')} missing. Add them in Vessels or Import Data.` };
     try {
-      return { r: calculate(vessel, x, library.lib), error: null };
+      return { r: calculate(vessel, x, library.lib, { overfillWarnPct: settings.overfillWarnPct }), error: null };
     } catch (e) {
       if (e instanceof EngineError) return { r: null, error: e.message };
       return { r: null, error: String(e) };
     }
-  }, [vessel, library.lib]);
+  }, [vessel, library.lib, settings.overfillWarnPct]);
   const { r, error } = useMemo(() => calc(lc), [calc, lc]);
 
   const makeCopy = (e: VesselEntry): string => {
@@ -111,7 +116,7 @@ export default function App() {
   useEffect(() => {
     const on = (e: KeyboardEvent) => {
       const mod = e.ctrlKey || e.metaKey;
-      if (e.altKey && !mod && /^Digit[1-9]$/.test(e.code)) { e.preventDefault(); setScreen(SCREENS[Number(e.code.slice(5)) - 1]); return; }
+      if (e.altKey && !mod && /^Digit[0-9]$/.test(e.code)) { e.preventDefault(); const k = Number(e.code.slice(5)); setScreen(SCREENS[k === 0 ? 9 : k - 1]); return; }
       if (mod && e.key.toLowerCase() === 's') { e.preventDefault(); void saveDb(); return; }
       if (isTyping(e.target)) return; // inside a text field the browser's own undo works on the text
       if (mod && e.key.toLowerCase() === 'z' && !e.shiftKey) { e.preventDefault(); doUndo(); return; }
@@ -157,7 +162,7 @@ export default function App() {
           <div key={n.id} style={{ display: 'contents' }}>
             {n.sepBefore && <div className="nav-sep" />}
             <button className={screen === n.id ? 'active' : ''} aria-current={screen === n.id ? 'page' : undefined} data-tip={n.label} aria-label={n.label} onClick={() => setScreen(n.id)}>
-              <Icon name={n.icon} /><span className="label">{n.label}</span><span className="key">Alt {i + 1}</span>
+              <Icon name={n.icon} /><span className="label">{n.label}</span><span className="key">Alt {i < 9 ? i + 1 : 0}</span>
             </button>
           </div>
         ))}
@@ -173,6 +178,7 @@ export default function App() {
               onDuplicate={tracked('Duplicate load case', store.duplicate)} onCreate={tracked('Add load case', store.create)} onRemove={tracked('Delete load case', store.remove, true)} onAdd={tracked('Add load case', store.add)} />
           )}
           {screen === 'loadcase' && <LoadCaseEditor vessel={vessel} lc={lc} r={r} onChange={tracked('Edit load case', store.update)} customGroups={library.lib.groups} onCreate={tracked('Add load case', store.add)} onCheck={() => setScreen('criteria')} />}
+          {screen === 'settings' && <SettingsScreen customGroups={library.lib.groups} />}
           {screen === 'compare' && <CompareScreen vessel={vessel} vesselId={store.entry.id} cases={store.cases} activeId={lc.id} calc={calc} onOpen={(id) => { store.setActive(id); setScreen('loadcase'); }} />}
           {screen === 'library' && <CriteriaLibraryScreen lib={library.lib} addCriterion={tracked('Save criterion', library.addCriterion)} removeCriterion={tracked('Delete criterion', library.removeCriterion, true)} saveGroup={tracked('Save stability group', library.saveGroup)} removeGroup={tracked('Delete stability group', library.removeGroup, true)} saveMoment={tracked('Save heeling moment', library.saveMoment)} removeMoment={tracked('Delete heeling moment', library.removeMoment, true)} preview={r} lcName={lc.name} />}
           {screen === 'criteria' && (r ? <Criteria r={r} lc={lc} onChange={tracked('Edit load case', store.update)} /> : <div className="error-box">{error}</div>)}

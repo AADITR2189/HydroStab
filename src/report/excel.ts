@@ -42,7 +42,7 @@ export async function buildXlsx(input: ReportInput): Promise<Blob> {
   const s = wb.addWorksheet(sheetName('Summary'));
   s.columns = [{ width: 36 }, { width: 70 }];
   title(s, 'Intact Stability Report');
-  kv(s, [['Load case', `${lc.name} (${lc.type})`], ['Date', meta.createdAt.toISOString().slice(0, 10)], ['Prepared by', meta.preparedBy || '—'], ['Checked by', meta.checkedBy || '—'],
+  kv(s, [['Load case', `${lc.name} (${lc.type})`], ['Date', meta.createdAt.toISOString().slice(0, 10)], ...(meta.company ? [['Company', meta.company] as [string, string]] : []), ['Prepared by', meta.preparedBy || '—'], ['Checked by', meta.checkedBy || '—'],
     ['Overall result', r.overallPass ? 'PASS' : 'FAIL'], ['Remarks', meta.remarks || '—']]);
   const res = s.getRow(s.rowCount - 1).getCell(2);
   res.font = { bold: true, color: { argb: r.overallPass ? 'FF15803D' : 'FFC81E46' } };

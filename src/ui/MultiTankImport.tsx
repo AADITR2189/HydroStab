@@ -12,6 +12,7 @@ import type { Check } from '../importer/checks';
 import { ReviewTable, SourceGrid } from './ImportTables';
 import { categories, tankTypes } from '../engine/tankTypes';
 import { PdfPage } from './PdfPage';
+import { getSettings } from '../settings';
 
 const def = datasetDef('TANK');
 
@@ -40,7 +41,7 @@ export function MultiTankSection({ doc, vessel, target, save }: Props) {
   useEffect(() => { setImports(mapping ? buildTankImports(blocks, { ...mapping, lbp: vessel.lbp }, vessel, fillGaps) : []); setResult(null); setConfirm(false); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [blocks, mapping, fillGaps, vessel.lbp]);
   const [open, setOpen] = useState<string | null>(null);
-  const [verifier, setVerifier] = useState('');
+  const [verifier, setVerifier] = useState(() => getSettings().userName);
   const [confirm, setConfirm] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
 

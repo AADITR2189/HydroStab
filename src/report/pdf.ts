@@ -61,7 +61,7 @@ export async function buildPdf(input: ReportInput): Promise<Blob> {
   doc.setFont('DejaVu', 'normal'); doc.setFontSize(10);
   doc.text(`Load case: ${lc.name}  (${lc.type})`, M, y); y += 5;
   doc.setFontSize(8.5); doc.setTextColor(...MUTED);
-  doc.text(`Date: ${meta.createdAt.toISOString().slice(0, 10)}   Prepared by: ${meta.preparedBy || '—'}   Checked by: ${meta.checkedBy || '—'}`, M, y); y += 7;
+  doc.text(`${meta.company ? `${meta.company}   ` : ''}Date: ${meta.createdAt.toISOString().slice(0, 10)}   Prepared by: ${meta.preparedBy || '—'}   Checked by: ${meta.checkedBy || '—'}`, M, y); y += 7;
   // overall result box
   const ok = r.overallPass;
   const box = ok ? PASS : FAIL; doc.setFillColor(box[0], box[1], box[2]); doc.roundedRect(M, y, W - 2 * M, 11, 1.5, 1.5, 'F');

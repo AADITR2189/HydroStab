@@ -18,12 +18,13 @@ export const ENGINE_VERSION = '0.1.0';
 const G = 9.81;
 const WIND_P = 504; // N/m², unrestricted service
 
-export function calculate(vessel: Vessel, lc: LoadCase, library: CriteriaLibrary = EMPTY_LIBRARY): Results {
+/** opts.overfillWarnPct: tanks filled between this % and 100 % give a warning (default 98). */
+export function calculate(vessel: Vessel, lc: LoadCase, library: CriteriaLibrary = EMPTY_LIBRARY, opts: { overfillWarnPct?: number } = {}): Results {
   const warnings: Warning[] = [];
   if (!(lc.seaDensity > 0)) throw new EngineError('INVALID_DENSITY', 'Sea water density must be greater than 0.');
 
   // ---------- §A.4 Tanks ----------
-  const tanks: TankResult[] = vessel.tanks.map((t) => resolveTank(t, lc.tanks[t.id], lc.fsmMethod, warnings));
+  const tanks: TankResult[] = vessel.tanks.map((t) => resolveTank(t, lc.tanks[t.id], lc.fsmMethod, warnings, opts.overfillWarnPct ?? 98));
 
   // ---------- §A.3 Summation ----------
   type Item = { group: string; w: number; x: number; y: number; z: number };

@@ -5,6 +5,7 @@ import type { Vessel } from '../engine/types';
 import type { UserVesselEntry } from '../importer/dbFile';
 import type { Provenance } from '../importer/apply';
 import { applyTypeEdits, catLabel, categories, categoryId, categoryOf, PALETTE, tankTypes, typeOf, type CategoryEdit, type TypeEdit } from '../engine/tankTypes';
+import { getSettings } from '../settings';
 
 export function TankTypesView({ v }: { v: Vessel }) {
   const types = tankTypes(v);
@@ -30,7 +31,7 @@ export function TankTypesEditor({ u, save, onDone }: { u: UserVesselEntry; save:
   const tankType: Record<string, string> = Object.fromEntries(Object.entries(tankUid).map(([k, id]) => [k, nameOf(id).trim()]));
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [moveTo, setMoveTo] = useState('');
-  const [by, setBy] = useState('');
+  const [by, setBy] = useState(() => getSettings().userName);
   const [reason, setReason] = useState('');
   const [msg, setMsg] = useState<string | null>(null);
 

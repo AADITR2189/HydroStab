@@ -22,6 +22,7 @@ import { WindageBookletSection } from './WindageBooklet';
 import { ReviewTable, SourceGrid } from './ImportTables';
 import type { KvKind } from '../importer/keyValue';
 import { Icon } from './Icon';
+import { getSettings } from '../settings';
 
 interface Props {
   entries: VesselEntry[];
@@ -81,7 +82,7 @@ export function DataImportScreen(p: Props) {
   const [mapping, setMapping] = useState<Mapping | null>(null);
   const [baseConv, setConv] = useState<Conversion | null>(null);
   const [ticked, setTicked] = useState<Set<number>>(new Set());
-  const [verifier, setVerifier] = useState('');
+  const [verifier, setVerifier] = useState(() => getSettings().userName);
   const [confirm, setConfirm] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; text: string; prov?: Provenance } | null>(null);
 

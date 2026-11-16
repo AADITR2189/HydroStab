@@ -9,6 +9,7 @@ import type { SourceDoc } from '../importer/sources';
 import { applyKv, checkKv, editKv, kvExpected, kvExtract, kvStored, KV_FIELDS, readKv, rowText, type KvHit, type KvKind } from '../importer/keyValue';
 import type { Decimal } from '../importer/numbers';
 import { PdfPage } from './PdfPage';
+import { getSettings } from '../settings';
 
 interface Props {
   kind: KvKind;
@@ -27,7 +28,7 @@ export function KvSection({ kind, doc, tableId, setTableId, vessel, target, save
   const [defaultX, setDefaultX] = useState<'AP' | 'MID_FWD'>('AP');
   const [hits, setHits] = useState<KvHit[]>([]);
   const [ticked, setTicked] = useState<Set<string>>(new Set());
-  const [verifier, setVerifier] = useState('');
+  const [verifier, setVerifier] = useState(() => getSettings().userName);
   const [confirm, setConfirm] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
 

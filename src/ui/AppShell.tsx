@@ -108,11 +108,13 @@ export function InstallButton() {
 // ---------- theme, messages, shortcuts ----------
 export function ThemeSwitch() {
   const [t, setT] = useState<ThemeChoice>(getTheme);
+  // the switch in the top bar and the one in Settings stay in step
+  useEffect(() => { const on = (e: Event) => setT((e as CustomEvent<ThemeChoice>).detail); window.addEventListener('stabilitysoft-theme', on); return () => window.removeEventListener('stabilitysoft-theme', on); }, []);
   const opts: [ThemeChoice, IconName, string][] = [['light', 'sun', 'Light'], ['dark', 'moon', 'Dark'], ['system', 'monitor', 'Same as this computer']];
   return (
     <span className="seg" role="group" aria-label="Colour theme">
       {opts.map(([v, icon, label]) => (
-        <button key={v} className={t === v ? 'on' : ''} aria-pressed={t === v} title={`Theme: ${label}`} aria-label={`Theme: ${label}`} onClick={() => { setT(v); applyTheme(v, true); }}><Icon name={icon} /></button>
+        <button key={v} className={t === v ? 'on' : ''} aria-pressed={t === v} title={`Theme: ${label}`} aria-label={`Theme: ${label}`} onClick={() => applyTheme(v, true)}><Icon name={icon} /></button>
       ))}
     </span>
   );
@@ -144,7 +146,7 @@ export function Toast({ msg, onDone }: { msg: ToastMsg | null; onDone: () => voi
 
 export function ShortcutsSheet({ screens, onClose }: { screens: string[]; onClose: () => void }) {
   const rows: [string, string][] = [
-    ...screens.map((s, i) => [s, `Alt + ${i + 1}`] as [string, string]),
+    ...screens.map((s, i) => [s, `Alt + ${i < 9 ? i + 1 : 0}`] as [string, string]),
     ['Undo the last change', 'Ctrl + Z'], ['Redo', 'Ctrl + Y'], ['Save the database to a file', 'Ctrl + S'],
     ['Back / forward between screens', 'Alt + ← / →'], ['Show or hide this list', '?'],
   ];

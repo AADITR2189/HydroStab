@@ -6,6 +6,7 @@ import type { UserVesselEntry } from './importer/dbFile';
 import { defaultLimits } from './engine/opLimits';
 import * as storage from './storage';
 import type { CriteriaLibrary, CriterionDef, GroupDef, LoadCase, MomentDef, Vessel } from './engine/types';
+import { getSettings } from './settings';
 
 const KEY = 'stabilitysoft.loadcases.v3';
 const ACTIVE = 'stabilitysoft.active.v3';
@@ -122,16 +123,19 @@ export function useLoadCases(entries: VesselEntry[] = VESSELS) {
 
 /** A new load case: lightship only, all tanks empty, the vessel's default stability groups. */
 export function emptyLoadCase(vessel: Vessel, n: number): LoadCase {
+  // defaults from Settings
+  const st = getSettings();
   return {
     id: newId(),
     name: `New load case ${n}`,
     type: 'Departure',
-    seaDensity: 1.025,
-    fsmMethod: 'ACTUAL',
+    seaDensity: st.seaDensity,
+    fsmMethod: st.fsmMethod,
     tanks: Object.fromEntries(vessel.tanks.map((t) => [t.id, { input: { mode: 'PERCENT' as const, value: 0 } }])),
     weights: [],
-    criteriaGroups: vessel.criteriaGroups,
+    criteriaGroups: vessel.criteriaGroups ?? (st.groups.length ? [...st.groups] : undefined),
     opLimits: defaultLimits(vessel),
+    ...(st.gzRange ? { gzRange: { ...st.gzRange } } : {}),
   };
 }
 

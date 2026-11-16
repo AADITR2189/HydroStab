@@ -9,6 +9,7 @@ import { missingVerification, newId } from '../store';
 import { TankTypesEditor } from './TankTypesEditor';
 import { saveDatabaseFile, StoragePanel } from './AppShell';
 import { Icon } from './Icon';
+import { getSettings } from '../settings';
 
 interface Props {
   entries: VesselEntry[];
@@ -205,7 +206,7 @@ export function LightshipForm({ u, onSave, onCancel }: { u: UserVesselEntry; onS
     : [{ description: 'Lightship', weight: v.lightship.weight || '', lcg: v.lightship.weight ? v.lightship.lcg : '', tcg: v.lightship.weight ? v.lightship.tcg : 0, vcg: v.lightship.weight ? v.lightship.vcg : '' }];
   const [items, setItems] = useState<Item[]>(start);
   const [xRef, setXRef] = useState<'AP' | 'MID'>('AP');
-  const [by, setBy] = useState('');
+  const [by, setBy] = useState(() => getSettings().userName);
   const toAP = (x: number) => (xRef === 'MID' ? L / 2 + x : x);
   const ok = (x: Num) => x !== '' && Number.isFinite(x);
   const complete = items.filter((x) => ok(x.weight) && ok(x.lcg) && ok(x.vcg));

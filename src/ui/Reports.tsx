@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import type { LoadCase, Results, Vessel } from '../engine/types';
 import { Icon } from './Icon';
+import { getSettings } from '../settings';
 
 interface Props {
   vessel: Vessel; status: string; source: string;
@@ -11,7 +12,7 @@ interface Props {
 
 export function ReportsScreen({ vessel, status, source, cases, activeId, calc }: Props) {
   const [caseId, setCaseId] = useState(activeId);
-  const [preparedBy, setPreparedBy] = useState('');
+  const [preparedBy, setPreparedBy] = useState(() => getSettings().userName);
   const [checkedBy, setCheckedBy] = useState('');
   const [remarks, setRemarks] = useState('');
   const [includeAll, setIncludeAll] = useState(true);
@@ -28,7 +29,7 @@ export function ReportsScreen({ vessel, status, source, cases, activeId, calc }:
       const [{ safeFileName }, { saveFile }] = await Promise.all([import('../report/reportData'), import('../report/save')]);
       const input = {
         vessel, lc, r: res.r,
-        meta: { preparedBy, checkedBy, remarks, dataStatus: status, dataSource: source, createdAt: new Date() },
+        meta: { preparedBy, company: getSettings().company || undefined, checkedBy, remarks, dataStatus: status, dataSource: source, createdAt: new Date() },
         allCases: includeAll ? cases.map((c) => ({ lc: c, ...calc(c) })) : undefined,
       };
       const blob = kind === 'pdf'

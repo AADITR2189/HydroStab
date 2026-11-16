@@ -6,6 +6,7 @@ import { groupByType, typeTotals } from '../engine/tankTypes';
 
 export interface ReportMeta {
   preparedBy: string;
+  company?: string;
   checkedBy: string;
   remarks: string;
   dataStatus: string;   // DEMO / UNVERIFIED / VERIFIED
