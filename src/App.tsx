@@ -131,7 +131,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <div className="brand"><span className="logo"><Icon name="anchor" /></span>StabilitySoft</div>
+        <div className="brand"><span className="logo"><Icon name="anchor" /></span>HydroStab</div>
         <div className="ctx-group">
           <select className="ctx-vessel" aria-label="Vessel" value={store.entry.id} onChange={(e) => store.setVessel(e.target.value)}>
             {entries.map((v) => <option key={v.id} value={v.id}>{v.vessel.name}{v.user ? ' (mine)' : ''}</option>)}

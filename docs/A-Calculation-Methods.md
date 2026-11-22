@@ -260,7 +260,7 @@ l_w1 = (P · A · Z) / (1000 · g · Δ)        [m]   steady wind lever (constan
 l_w2 = 1.5 · l_w1                          [m]   gust wind lever
 ```
 
-| Symbol | Meaning | Source in StabilitySoft |
+| Symbol | Meaning | Source in HydroStab |
 |---|---|---|
 | P | Wind pressure = 504 N/m² (unrestricted service). A reduced value may be used for restricted service only if the Administration approves it. | Criteria set parameter. Any change from 504 requires an approval reference. |
 | A | Projected lateral area of the ship and deck cargo above the waterline (m²) | Windage table vs draft (interpolated at T_mean) + deck cargo windage items in the load case |

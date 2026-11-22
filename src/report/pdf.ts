@@ -23,7 +23,7 @@ export async function buildPdf(input: ReportInput): Promise<Blob> {
   doc.addFileToVFS('DejaVuSans-Bold.ttf', DEJAVU_BOLD);
   doc.addFont('DejaVuSans-Bold.ttf', 'DejaVu', 'bold');
   doc.setFont('DejaVu', 'normal');
-  doc.setProperties({ title: `Stability report ${input.vessel.name} ${input.lc.name}`, subject: 'Intact stability', creator: 'StabilitySoft' });
+  doc.setProperties({ title: `Stability report ${input.vessel.name} ${input.lc.name}`, subject: 'Intact stability', creator: 'HydroStab' });
 
   const { vessel, lc, r, meta } = input;
   const W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight();
@@ -149,7 +149,7 @@ export async function buildPdf(input: ReportInput): Promise<Blob> {
     doc.setFontSize(7); doc.setTextColor(...MUTED);
     if (i > 1) {
       doc.text(`${vessel.name} · ${lc.name}`, M, 12);
-      doc.text('StabilitySoft · Intact stability report', W - M, 12, { align: 'right' });
+      doc.text('HydroStab · Intact stability report', W - M, 12, { align: 'right' });
       doc.setDrawColor(200, 205, 210); doc.setLineWidth(0.2); doc.line(M, 14, W - M, 14);
     }
     doc.setDrawColor(200, 205, 210); doc.line(M, H - 13, W - M, H - 13);

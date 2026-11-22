@@ -82,6 +82,11 @@ describe('arrival generator', () => {
 });
 
 describe('load case file', () => {
+  it('opens a load case file saved before the rename (StabilitySoft)', async () => {
+    const text = (await buildLoadCaseFile(v, dep)).replace('"HydroStab load case"', '"StabilitySoft load case"');
+    const r = await readLoadCaseFile(text, v, id);
+    expect(r.errors).toEqual([]);
+  });
   it('round trip into the same vessel', async () => {
     const text = await buildLoadCaseFile(v, dep);
     const r = await readLoadCaseFile(text, v, id);

@@ -1,4 +1,4 @@
-// Domain types for the StabilitySoft calculation engine.
+// Domain types for the HydroStab calculation engine.
 // Conventions (see docs/A-Calculation-Methods.md §A.1):
 //   X from Aft Perpendicular, positive forward (m)
 //   Y from centreline, positive to starboard (m)

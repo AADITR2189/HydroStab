@@ -1,6 +1,6 @@
 # System Architecture Document
 
-**StabilitySoft — Vessel Stability Platform**
+**HydroStab — Vessel Stability Platform**
 
 | Item | Value |
 |---|---|

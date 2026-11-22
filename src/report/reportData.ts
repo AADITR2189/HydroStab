@@ -116,7 +116,7 @@ export async function reportHash(input: ReportInput): Promise<string> {
 export function traceRows(input: ReportInput, hash: string): [string, string][] {
   const { vessel, lc, meta } = input;
   return [
-    ['Calculation engine', `StabilitySoft engine ${ENGINE_VERSION}`],
+    ['Calculation engine', `HydroStab engine ${ENGINE_VERSION}`],
     ['Vessel data', `${meta.dataStatus === 'UNVERIFIED' ? 'EXTRACTED, NOT VERIFIED' : meta.dataStatus} · ${meta.dataSource}`],
     ['Hydrostatics', vessel.hydro.trims && vessel.hydro.trims.length > 1 ? `free trim between ${vessel.hydro.trims.length} trimmed tables (linear in trim)` : 'even-keel table, small-trim method'],
     ['Interpolation', 'hydrostatics linear in displacement; KN: PCHIP in displacement and in heel angle; no extrapolation'],

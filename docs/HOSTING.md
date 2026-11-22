@@ -1,6 +1,6 @@
-# Installing StabilitySoft as an app (PWA)
+# Installing HydroStab as an app (PWA)
 
-StabilitySoft is a **Progressive Web App**: it is put on a web address once, then installed on each
+HydroStab is a **Progressive Web App**: it is put on a web address once, then installed on each
 computer, tablet or phone from that address. After installing it opens like a normal program and works
 **without internet**.
 

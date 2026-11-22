@@ -13,8 +13,8 @@ export default defineConfig({
       includeAssets: ['icon.svg', 'apple-touch-icon.png'],
       manifest: {
         id: './',
-        name: 'StabilitySoft — Vessel Stability',
-        short_name: 'StabilitySoft',
+        name: 'HydroStab — Vessel Stability',
+        short_name: 'HydroStab',
         description: 'Vessel intact stability: loading conditions, IMO IS Code 2008 and class criteria, GZ curves, reports. Works offline.',
         lang: 'en',
         theme_color: '#22302B',

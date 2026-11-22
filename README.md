@@ -1,6 +1,6 @@
-# StabilitySoft — Vessel Stability Software
+# HydroStab — Vessel Stability Software
 
-**StabilitySoft** is vessel intact-stability software that replaces Excel-based stability calculations with a controlled, checked and traceable system.
+**HydroStab** is vessel intact-stability software that replaces Excel-based stability calculations with a controlled, checked and traceable system.
 
 It runs as an installable **web app (PWA)** on PC and laptop: it opens in the browser, installs like a program, and works **fully offline** after the first start. All data stays on the computer.
 
@@ -12,7 +12,7 @@ It runs as an installable **web app (PWA)** on PC and laptop: it opens in the br
 
 ## Why this exists
 
-| Problem with Excel | How StabilitySoft solves it |
+| Problem with Excel | How HydroStab solves it |
 |---|---|
 | Human input errors | Controlled entry with range checks, units and validation; imported tables are checked against the source cell by cell |
 | Formula modification errors | Formulas are fixed inside a tested calculation engine (220 automatic tests); users cannot edit them |
@@ -79,7 +79,7 @@ It runs as an installable **web app (PWA)** on PC and laptop: it opens in the br
 
 ## Approval
 
-To be used as an **approved onboard stability instrument**, software needs **classification society type approval** (IACS UR L5, IMO MSC.1/Circ.1229) and **approval of the installed vessel data**. StabilitySoft does not have these approvals yet. The on-screen and report notice about this was removed at the owner's decision, after its results were checked by several users. The design follows the approval requirements (traceable data, fixed formulas, report checksums), so it can be submitted later (Roadmap, Phase 5).
+To be used as an **approved onboard stability instrument**, software needs **classification society type approval** (IACS UR L5, IMO MSC.1/Circ.1229) and **approval of the installed vessel data**. HydroStab does not have these approvals yet. The on-screen and report notice about this was removed at the owner's decision, after its results were checked by several users. The design follows the approval requirements (traceable data, fixed formulas, report checksums), so it can be submitted later (Roadmap, Phase 5).
 
 ---
 

@@ -1,6 +1,6 @@
 # Development Roadmap
 
-**StabilitySoft — Vessel Stability Platform**
+**HydroStab — Vessel Stability Platform**
 
 | Item | Value |
 |---|---|
@@ -45,7 +45,7 @@ The sections below are the original plan.
 
 ```mermaid
 gantt
-  title StabilitySoft Roadmap (indicative)
+  title HydroStab Roadmap (indicative)
   dateFormat  YYYY-MM
   axisFormat  %b %y
   section Phase 0

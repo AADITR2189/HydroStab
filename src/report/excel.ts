@@ -14,7 +14,7 @@ export async function buildXlsx(input: ReportInput): Promise<Blob> {
   const hash = await reportHash(input);
   const { vessel, lc, r, meta } = input;
   const wb = new ExcelJS.Workbook();
-  wb.creator = 'StabilitySoft';
+  wb.creator = 'HydroStab';
   wb.created = meta.createdAt;
   wb.title = `Stability report ${vessel.name} ${lc.name}`;
   const used = new Set<string>();

@@ -1,6 +1,6 @@
 # Product Requirements Document (PRD)
 
-**StabilitySoft — Vessel Stability Platform**
+**HydroStab — Vessel Stability Platform**
 
 | Item | Value |
 |---|---|
@@ -15,7 +15,7 @@
 
 > **Make every stability calculation onboard and ashore correct, traceable and effortless. No hidden formulas, no copy-paste errors, no uncertainty about which data version was used.**
 
-StabilitySoft replaces fragile, vessel-specific Excel workbooks with one professional platform. It offers the engineering rigour of tools like NAPA or Maxsurf Stability, while a Chief Officer can use it at 0200 before departure, offline, with confidence.
+HydroStab replaces fragile, vessel-specific Excel workbooks with one professional platform. It offers the engineering rigour of tools like NAPA or Maxsurf Stability, while a Chief Officer can use it at 0200 before departure, offline, with confidence.
 
 ### 1.1 Product principles
 1. **Accuracy first.** One validated engine, one formula reference (Appendix A), benchmarked against approved booklets.

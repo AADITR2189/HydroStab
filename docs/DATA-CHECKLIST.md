@@ -1,6 +1,6 @@
 # Vessel Data Checklist
 
-This is what we need to load a real vessel into StabilitySoft. Almost all of it is in the vessel's **approved Trim & Stability Booklet** (sometimes called the *Stability Information Booklet* or *Loading Manual*).
+This is what we need to load a real vessel into HydroStab. Almost all of it is in the vessel's **approved Trim & Stability Booklet** (sometimes called the *Stability Information Booklet* or *Loading Manual*).
 
 Send whatever format you have: **PDF, Excel, CSV, Word, or photos/scans**. Excel or CSV is fastest. PDF is fine.
 

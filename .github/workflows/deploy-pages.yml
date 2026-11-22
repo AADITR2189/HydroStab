@@ -1,4 +1,4 @@
-# Builds StabilitySoft, runs the tests and publishes the installable app (PWA) on GitHub Pages.
+# Builds HydroStab, runs the tests and publishes the installable app (PWA) on GitHub Pages.
 # One-time set-up in GitHub: Settings → Pages → "Build and deployment" → Source: "GitHub Actions".
 # Runs on every push to the repository's default branch, or by hand (Actions → Deploy app → Run workflow).
 name: Deploy app (GitHub Pages)

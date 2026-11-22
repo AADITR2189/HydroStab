@@ -1,6 +1,6 @@
 # UI/UX Specification
 
-**StabilitySoft — Vessel Stability Platform**
+**HydroStab — Vessel Stability Platform**
 
 | Item | Value |
 |---|---|
@@ -87,7 +87,7 @@ App shell, Left nav, Top bar, Status bar, Panel (dockable), Tabs, Data grid (vir
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────────┐
-│ ⚓ StabilitySoft │ MV OCEAN PIONEER ▾ (IMO 9412345) │ Load case: Departure Rotterdam ▾ │ 🔍 Ctrl+K │ ☾ │ 👤 │
+│ ⚓ HydroStab │ MV OCEAN PIONEER ▾ (IMO 9412345) │ Load case: Departure Rotterdam ▾ │ 🔍 Ctrl+K │ ☾ │ 👤 │
 ├──────────────┬───────────────────────────────────────────────────────────────────────────┤
 │  ▣ Dashboard │                                                                           │
 │  ⛴ Vessel DB │                                                                           │

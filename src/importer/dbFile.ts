@@ -5,7 +5,9 @@ import type { CriteriaLibrary, LoadCase, Vessel } from '../engine/types';
 import type { Provenance } from './apply';
 import { sha256Hex } from './sources';
 
-export const DB_FORMAT = 'StabilitySoft database';
+export const DB_FORMAT = 'HydroStab database';
+/** files saved before the app was renamed (StabilitySoft) are still accepted */
+const DB_FORMATS_OLD = ['StabilitySoft database'];
 export const DB_VERSION = 1;
 
 export interface UserVesselEntry {
@@ -88,8 +90,8 @@ export interface DbPreview {
 
 export async function readDbFile(text: string, knownVesselIds: string[]): Promise<DbPreview> {
   let file: DbFile;
-  try { file = JSON.parse(text) as DbFile; } catch { throw new Error('This file is not a StabilitySoft database (not valid JSON).'); }
-  if (!file || file.format !== DB_FORMAT || !file.data) throw new Error('This file is not a StabilitySoft database file.');
+  try { file = JSON.parse(text) as DbFile; } catch { throw new Error('This file is not a HydroStab database (not valid JSON).'); }
+  if (!file || (file.format !== DB_FORMAT && !DB_FORMATS_OLD.includes(file.format)) || !file.data) throw new Error('This file is not a HydroStab database file.');
   if (typeof file.version !== 'number' || file.version > DB_VERSION) throw new Error(`Database file version ${file.version} is newer than this software understands (${DB_VERSION}). Update the software first.`);
   const errors: string[] = [], warnings: string[] = [];
   const checksumOk = (await sha256Hex(JSON.stringify(file.data))) === file.sha256;

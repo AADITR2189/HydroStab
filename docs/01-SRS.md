@@ -1,6 +1,6 @@
 # Software Requirements Specification (SRS)
 
-**StabilitySoft — Vessel Stability Platform**
+**HydroStab — Vessel Stability Platform**
 
 | Item | Value |
 |---|---|
@@ -31,10 +31,10 @@
 ## 1. Introduction
 
 ### 1.1 Purpose
-This SRS defines the functional and non-functional requirements of StabilitySoft Phase 1 (Intact Stability). It also defines the architectural requirements that keep future modules possible. It is intended for developers, testers, naval architects, product owners and classification society reviewers.
+This SRS defines the functional and non-functional requirements of HydroStab Phase 1 (Intact Stability). It also defines the architectural requirements that keep future modules possible. It is intended for developers, testers, naval architects, product owners and classification society reviewers.
 
 ### 1.2 Scope
-StabilitySoft is a vessel stability calculation platform, delivered first as an offline-capable Progressive Web Application (PWA). It:
+HydroStab is a vessel stability calculation platform, delivered first as an offline-capable Progressive Web Application (PWA). It:
 - maintains **vessel-specific databases** (particulars, lightship, hydrostatics, KN curves, tanks, windage, openings);
 - **imports** engineering data from Excel, CSV, PDF and Word with mandatory human verification;
 - manages **unlimited load cases** per vessel;
@@ -88,15 +88,15 @@ Section 2 describes the product context. Section 3 lists the uniquely numbered, 
 ## 2. Overall Description
 
 ### 2.1 Product perspective
-StabilitySoft is a new, self-contained product that replaces vessel-specific Excel workbooks. It consists of:
+HydroStab is a new, self-contained product that replaces vessel-specific Excel workbooks. It consists of:
 - a **PWA client** (runs in Chromium, Edge, Safari and Firefox browsers; installable; offline);
 - a **cloud/server back end** (API, PostgreSQL database, file-processing service);
 - a **calculation engine** shared by client and server (identical code, identical results).
 
 ```mermaid
 flowchart LR
-  U[Users: Office & Onboard] --> PWA[StabilitySoft PWA<br/>offline-capable]
-  PWA <-- sync --> API[StabilitySoft API]
+  U[Users: Office & Onboard] --> PWA[HydroStab PWA<br/>offline-capable]
+  PWA <-- sync --> API[HydroStab API]
   API --> DB[(PostgreSQL)]
   API --> FP[File Processing Service]
   FP --> OBJ[(Object Storage<br/>source documents)]

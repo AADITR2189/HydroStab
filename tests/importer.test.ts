@@ -122,6 +122,15 @@ describe('database file', () => {
     expect(p.errors).toEqual([]);
     expect(p.file.data).toEqual(JSON.parse(JSON.stringify(data)));
   });
+  it('opens a file saved before the rename (StabilitySoft) and writes the new name', async () => {
+    const text = await buildDbFile(data);
+    expect(JSON.parse(text).format).toBe('HydroStab database');
+    const old = text.replace('"HydroStab database"', '"StabilitySoft database"');
+    const p = await readDbFile(old, VESSELS.map((x) => x.id));
+    expect(p.checksumOk).toBe(true);
+    expect(p.errors).toEqual([]);
+    await expect(readDbFile(text.replace('"HydroStab database"', '"Other app"'), [])).rejects.toThrow(/not a HydroStab database/);
+  });
   it('detects an edited file', async () => {
     const text = (await buildDbFile(data)).replace('"lbp": 57.4', '"lbp": 57.5').replace('"lbp":57.4', '"lbp":57.5');
     const p = await readDbFile(text, []);

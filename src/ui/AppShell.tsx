@@ -16,7 +16,7 @@ export function useStorageStatus() {
 /** Save the whole database to a file and record the backup. */
 export async function saveDatabaseFile(data: DbData): Promise<string> {
   const text = await buildDbFile(data);
-  const name = `StabilitySoft_database_${new Date().toISOString().slice(0, 10)}.json`;
+  const name = `HydroStab_database_${new Date().toISOString().slice(0, 10)}.json`;
   const out = await saveFile(name, new Blob([text], { type: 'application/json' }));
   if (out === 'saved') storage.markBackedUp();
   return out === 'saved' ? `${name} (${Math.round(text.length / 1024)} KB) saved.` : out === 'declined' ? 'Save cancelled.' : 'Saving files is not available here.';

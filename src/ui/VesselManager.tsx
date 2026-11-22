@@ -158,7 +158,7 @@ export function ParticularsForm({ existing, onSave, onCancel }: { existing?: Use
     };
     const id = existing?.id ?? `u-${newId()}`;
     onSave({
-      id, vessel, source: existing?.source ?? 'Created in StabilitySoft', createdAt: existing?.createdAt ?? new Date().toISOString(),
+      id, vessel, source: existing?.source ?? 'Created in HydroStab', createdAt: existing?.createdAt ?? new Date().toISOString(),
       provenance: {
         ...(existing?.provenance ?? {}),
         PARTICULARS: { dataset: 'PARTICULARS', method: 'TYPED', fileName: 'Typed in', fileSha256: '', location: 'General particulars form', rows: 1, values: 10, editedCells: 0, checks: { errors: 0, warnings: 0 }, storedCheck: 'entered directly', verifiedBy: s.by.trim(), verifiedAt: new Date().toISOString() },
@@ -324,7 +324,7 @@ function DatabaseFile(p: Props) {
             {mode === 'REPLACE' && <p className="warn-text small">Everything now in the software that is not in the file will be removed. Save the current database to a file first if you may need it.</p>}
             <div className="form-row"><button onClick={doImport}>{mode === 'MERGE' ? 'Merge into database' : 'Replace database'}</button><button className="ghost" onClick={() => setPreview(null)}>Cancel</button></div>
           </>}
-          {preview.errors.length > 0 && <p className="fail-text">This file cannot be imported. Use the original file saved by StabilitySoft.</p>}
+          {preview.errors.length > 0 && <p className="fail-text">This file cannot be imported. Use the original file saved by HydroStab.</p>}
         </div>
       )}
     </section>

@@ -4,7 +4,9 @@ import { ENGINE_VERSION } from '../engine/stability';
 import { validateLoadCase } from './dbFile';
 import { sha256Hex } from './sources';
 
-export const LC_FORMAT = 'StabilitySoft load case';
+export const LC_FORMAT = 'HydroStab load case';
+/** files saved before the app was renamed (StabilitySoft) are still accepted */
+const LC_FORMATS_OLD = ['StabilitySoft load case'];
 
 export async function buildLoadCaseFile(v: Vessel, lc: LoadCase): Promise<string> {
   const body = JSON.stringify(lc);
@@ -15,8 +17,8 @@ export interface LoadCaseImport { lc: LoadCase; errors: string[]; warnings: stri
 
 export async function readLoadCaseFile(text: string, v: Vessel, newId: () => string): Promise<LoadCaseImport> {
   let f: { format?: string; version?: number; vessel?: { name: string; imo: string }; sha256?: string; loadCase?: LoadCase };
-  try { f = JSON.parse(text); } catch { throw new Error('This file is not a StabilitySoft load case (not valid JSON).'); }
-  if (!f || f.format !== LC_FORMAT || !f.loadCase) throw new Error('This file is not a StabilitySoft load case file.');
+  try { f = JSON.parse(text); } catch { throw new Error('This file is not a HydroStab load case (not valid JSON).'); }
+  if (!f || (f.format !== LC_FORMAT && !LC_FORMATS_OLD.includes(f.format ?? '')) || !f.loadCase) throw new Error('This file is not a HydroStab load case file.');
   const errors: string[] = [], warnings: string[] = [];
   if ((await sha256Hex(JSON.stringify(f.loadCase))) !== f.sha256) errors.push('Checksum does not match: the file was changed or damaged after it was saved.');
   errors.push(...validateLoadCase(f.loadCase, 'Load case'));

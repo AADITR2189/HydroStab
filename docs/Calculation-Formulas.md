@@ -1,4 +1,4 @@
-# StabilitySoft: formulas used in the calculations
+# HydroStab: formulas used in the calculations
 
 This report lists every formula the program uses, taken from the program code as it is now (engine `src/engine/`, importer `src/importer/`). Each section names the code file that does the work.
 

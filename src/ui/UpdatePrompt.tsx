@@ -16,7 +16,7 @@ export function UpdatePrompt() {
   if (needRefresh) {
     return (
       <div className="toast" role="alert">
-        <Icon name="download" /><span>A new version of StabilitySoft is available. Your data is kept.</span>
+        <Icon name="download" /><span>A new version of HydroStab is available. Your data is kept.</span>
         <button onClick={() => updateServiceWorker(true)}>Update now</button>
         <button className="ghost" onClick={() => setNeedRefresh(false)}>Later</button>
       </div>
@@ -25,7 +25,7 @@ export function UpdatePrompt() {
   if (offlineReady) {
     return (
       <div className="toast ok" role="status">
-        <Icon name="check" /><span>StabilitySoft is ready to work offline on this device.</span>
+        <Icon name="check" /><span>HydroStab is ready to work offline on this device.</span>
         <button className="ghost" onClick={() => setOfflineReady(false)}>OK</button>
       </div>
     );

@@ -7,7 +7,7 @@ Usage:
     python3 tools/extract_booklet.py "vessels/marsol-splendor/DU5864_1022_PRELIMINARY INTACT STABILITY BOOKLET_REV.0.pdf" vessels/marsol-splendor
 
 Every value keeps the PDF page it came from, so it can be verified against the source.
-Coordinates are converted ONCE from the booklet convention to the StabilitySoft convention:
+Coordinates are converted ONCE from the booklet convention to the HydroStab convention:
     booklet:  longitudinal from MIDSHIP, "f" forward / "a" aft; transverse "s"/"p"
     internal: X from AP (+ forward), Y + starboard, Z from baseline
 Nothing produced here is trusted until a person verifies it (status = "EXTRACTED").
