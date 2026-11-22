@@ -4,7 +4,7 @@
 
 It runs as an installable **web app (PWA)** on PC and laptop: it opens in the browser, installs like a program, and works **fully offline** after the first start. All data stays on the computer.
 
-**Live app:** https://aaditr2189.github.io/StabiltySoft/
+**Live app:** https://aaditr2189.github.io/HydroStab/
 
 > **Status:** working version, in daily use for planning. The built-in vessel **MARSOL SPLENDOR** is loaded from its stability booklet and all 13 booklet conditions are benchmarked; the results have been checked by several users. How every number is calculated is written out in **[Calculation Formulas](docs/Calculation-Formulas.md)**.
 

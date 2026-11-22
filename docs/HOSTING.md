@@ -13,7 +13,7 @@ server that serves files over **https** works. Two easy ways:
 1. In GitHub: *Settings → Pages → Build and deployment → Source:* **GitHub Actions**.
 2. Push to the default branch (or *Actions → Deploy app (GitHub Pages) → Run workflow*).
 3. After 2–3 minutes the address is shown in *Settings → Pages*, e.g.
-   `https://<account>.github.io/stabiltysoft/`. Every later push updates the app automatically.
+   `https://<account>.github.io/<project name>/` (for this project: `https://aaditr2189.github.io/HydroStab/`). Every later push updates the app automatically.
    (A private repository needs a paid GitHub plan for Pages; otherwise use option B.)
 
 **B. Any company web server / intranet / cloud storage website**
