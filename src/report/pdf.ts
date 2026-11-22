@@ -5,6 +5,7 @@ import autoTable from 'jspdf-autotable';
 import type { CriteriaGroupResult, Results } from '../engine/types';
 import { ENGINE_VERSION } from '../engine/stability';
 import { DEJAVU_BOLD, DEJAVU_REGULAR } from './fonts/dejavu';
+import { LOGO_PNG_BASE64 } from './logoPng';
 import {
   dataNote, conditionRows, criterionCells, n, particularsRows, reportHash, tankRowsByType, traceRows, weightRows, type ReportInput,
 } from './reportData';
@@ -55,6 +56,10 @@ export async function buildPdf(input: ReportInput): Promise<Blob> {
   };
 
   // ---------- title block ----------
+  // HydroStab mark and name, top right
+  doc.addImage(LOGO_PNG_BASE64, 'PNG', W - M - 16, y - 4, 16, 16);
+  doc.setFont('DejaVu', 'bold'); doc.setFontSize(9); doc.setTextColor(...HEAD);
+  doc.text('HydroStab', W - M - 8, y + 15.5, { align: 'center' });
   doc.setFont('DejaVu', 'bold'); doc.setFontSize(18); doc.setTextColor(...HEAD);
   doc.text('Intact Stability Report', M, y + 6); y += 12;
   doc.setFontSize(11); doc.setTextColor(...INK);
@@ -150,6 +155,7 @@ export async function buildPdf(input: ReportInput): Promise<Blob> {
     if (i > 1) {
       doc.text(`${vessel.name} · ${lc.name}`, M, 12);
       doc.text('HydroStab · Intact stability report', W - M, 12, { align: 'right' });
+      doc.addImage(LOGO_PNG_BASE64, 'PNG', W - M - doc.getTextWidth('HydroStab · Intact stability report') - 6, 7.6, 5, 5);
       doc.setDrawColor(200, 205, 210); doc.setLineWidth(0.2); doc.line(M, 14, W - M, 14);
     }
     doc.setDrawColor(200, 205, 210); doc.line(M, H - 13, W - M, H - 13);

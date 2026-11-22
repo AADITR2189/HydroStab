@@ -44,6 +44,7 @@
   --t-fast: 120ms; --t-med: 200ms; --t-slow: 320ms;
   --font: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
   --mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', Consolas, Menlo, monospace;
+  --logo-ink: #22302B; --logo-sea: #245F80; --logo-m: #A3195B;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
@@ -57,6 +58,7 @@
     --area-a: rgba(240, 122, 110, 0.20); --area-b: rgba(108, 196, 135, 0.17); --area-1: rgba(127, 178, 206, 0.20); --area-2: rgba(200, 175, 110, 0.24); --area-3: rgba(227, 180, 91, 0.16); --area-4: rgba(108, 196, 135, 0.14);
     --ref: rgba(216, 222, 217, 0.5);
     --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4); --scrim-edge: rgba(0, 0, 0, 0.4);
+    --logo-ink: #F1F3EE; --logo-sea: #8EBCD6; --logo-m: #E36A9F;
     color-scheme: dark;
   }
 }
@@ -70,6 +72,7 @@
   --area-a: rgba(240, 122, 110, 0.20); --area-b: rgba(108, 196, 135, 0.17); --area-1: rgba(127, 178, 206, 0.20); --area-2: rgba(200, 175, 110, 0.24); --area-3: rgba(227, 180, 91, 0.16); --area-4: rgba(108, 196, 135, 0.14);
   --ref: rgba(216, 222, 217, 0.5);
   --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4); --scrim-edge: rgba(0, 0, 0, 0.4);
+  --logo-ink: #F1F3EE; --logo-sea: #8EBCD6; --logo-m: #E36A9F;
   color-scheme: dark;
 }
 
@@ -132,8 +135,8 @@ button .icon-svg, .file-btn .icon-svg { width: 16px; height: 16px; margin-right:
   position: relative; z-index: 5;
 }
 .brand { display: flex; align-items: center; gap: 8px; font-weight: 750; letter-spacing: -0.01em; color: var(--text); font-size: 1.0625rem; white-space: nowrap; }
-.brand .logo { width: 26px; height: 26px; border-radius: var(--r-sm); background: var(--primary); color: var(--on-primary); display: grid; place-items: center; }
-.brand .logo .icon-svg { width: 17px; height: 17px; stroke-width: 2; }
+.logo-mark { display: block; flex: 0 0 auto; }
+.lm-ink { fill: var(--logo-ink); } .lm-sea { fill: var(--logo-sea); } .lm-m { fill: var(--logo-m); }
 .ctx-group { display: flex; align-items: center; gap: 10px; padding: 4px 10px 4px 4px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface-2); min-width: 0; }
 .ctx-group select { background: var(--surface); }
 .ctx-group .sub { display: flex; flex-direction: column; line-height: 1.15; }

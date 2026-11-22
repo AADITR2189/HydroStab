@@ -17,7 +17,7 @@ export default defineConfig({
         short_name: 'HydroStab',
         description: 'Vessel intact stability: loading conditions, IMO IS Code 2008 and class criteria, GZ curves, reports. Works offline.',
         lang: 'en',
-        theme_color: '#22302B',
+        theme_color: '#FBFBF8',
         background_color: '#E7EBE5',
         display: 'standalone',
         orientation: 'any',

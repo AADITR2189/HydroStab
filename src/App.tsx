@@ -11,6 +11,7 @@ import { VesselManager } from './ui/VesselManager';
 import { ImportedDataScreen } from './ui/ImportedData';
 import { BackupBanner, InstallButton, saveDatabaseFile, ShortcutsSheet, StorageBadge, ThemeSwitch, Toast, type ToastMsg } from './ui/AppShell';
 import { Icon, type IconName } from './ui/Icon';
+import { LogoMark } from './ui/LogoMark';
 import { useHistory } from './ui/history';
 import { UpdatePrompt } from './ui/UpdatePrompt';
 import { CriteriaLibraryScreen } from './ui/CriteriaLibrary';
@@ -131,7 +132,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <div className="brand"><span className="logo"><Icon name="anchor" /></span>HydroStab</div>
+        <div className="brand"><LogoMark size={30} small />HydroStab</div>
         <div className="ctx-group">
           <select className="ctx-vessel" aria-label="Vessel" value={store.entry.id} onChange={(e) => store.setVessel(e.target.value)}>
             {entries.map((v) => <option key={v.id} value={v.id}>{v.vessel.name}{v.user ? ' (mine)' : ''}</option>)}

@@ -42,6 +42,19 @@ def mark(sw, wl_h, dot_r, wl_half, colors, ty):
             f'<rect fill="{sea}" x="{CX - wl_half:.2f}" y="{CY - wl_h / 2:.2f}" width="{2 * wl_half:.2f}" height="{wl_h:.2f}"/>'
             f'<circle fill="{m}" cx="{mx:.2f}" cy="{my:.2f}" r="{dot_r}"/></g>')
 
+def parts(sw, wl_h, dot_r, wl_half, ty):
+    """the four shapes of the mark (for the app's theme-coloured component): hull, body, sea, metacentre"""
+    h = sw / 2
+    _, _, _, _, _, outer = section(h)
+    _, _, _, _, _, inner = section(-h)
+    x0, x1, yd, yb, r, _ = section(-h + 1.5)
+    yl, yr = side_hit(x0, CY), side_hit(x1, CY)
+    body = (f'M{x0:.2f} {yl:.2f} V{yb - r:.2f} A{r:.2f} {r:.2f} 0 0 0 {x0 + r:.2f} {yb:.2f} '
+            f'H{x1 - r:.2f} A{r:.2f} {r:.2f} 0 0 0 {x1:.2f} {yb - r:.2f} V{yr:.2f} Z')
+    mx, my = rot(CX, YD - h - 40, -HEEL)
+    return dict(ty=ty, rotate=f'rotate({-HEEL} {CX} {CY})', hull=f'{outer} {inner}', body=body,
+                sea=[round(CX - wl_half, 2), round(CY - wl_h / 2, 2), round(2 * wl_half, 2), wl_h], m=[round(mx, 2), round(my, 2), dot_r])
+
 def svg(body, bg=None, title='HydroStab'):
     tile = f'<rect width="256" height="256" rx="56" fill="{bg}"/>' if bg else ''
     return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><title>{title}</title>{tile}{body}</svg>\n'
@@ -61,3 +74,7 @@ out = {
 }
 for k, v in out.items(): open(k, 'w').write(v)
 print('written', len(out))
+
+if '--json' in sys.argv:
+    import json
+    print(json.dumps({'regular': parts(**REG), 'small': parts(**SMALL)}))

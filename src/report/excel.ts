@@ -1,6 +1,7 @@
 // Excel stability report (.xlsx, values only). Same content as the PDF, one sheet per topic and
 // one GZ sheet per stability group, plus a summary of all load cases of the vessel.
 import ExcelJS from 'exceljs';
+import { LOGO_PNG_BASE64 } from './logoPng';
 import type { Results } from '../engine/types';
 import { groupByType, typeTotals } from '../engine/tankTypes';
 import {
@@ -40,6 +41,8 @@ export async function buildXlsx(input: ReportInput): Promise<Blob> {
 
   // ---------- Summary ----------
   const s = wb.addWorksheet(sheetName('Summary'));
+  // HydroStab mark at the top right of the summary
+  s.addImage(wb.addImage({ base64: LOGO_PNG_BASE64, extension: 'png' }), { tl: { col: 1.82, row: 0.1 }, ext: { width: 56, height: 56 } });
   s.columns = [{ width: 36 }, { width: 70 }];
   title(s, 'Intact Stability Report');
   kv(s, [['Load case', `${lc.name} (${lc.type})`], ['Date', meta.createdAt.toISOString().slice(0, 10)], ...(meta.company ? [['Company', meta.company] as [string, string]] : []), ['Prepared by', meta.preparedBy || '—'], ['Checked by', meta.checkedBy || '—'],

@@ -67,6 +67,7 @@ It runs as an installable **web app (PWA)** on PC and laptop: it opens in the br
 |---|---|---|
 | — | [Calculation Formulas](docs/Calculation-Formulas.md) | *Which formulas does the app use, exactly?* (written from the code) |
 | — | [Installing as an app / hosting](docs/HOSTING.md) | *How is it installed and published?* |
+| — | [Logo usage guide](docs/brand/LOGO-GUIDE.md) | *Which logo file, colours, sizes?* |
 | 1 | [Software Requirements Specification (SRS)](docs/01-SRS.md) | *What must the software do?* (numbered requirements) |
 | 2 | [Product Requirements Document (PRD)](docs/02-PRD.md) | *Who is it for and why?* |
 | 3 | [System Architecture](docs/03-System-Architecture.md) | *How is it built?* |
